@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, FunctionComponent } from 'react';
+import { useGameState, GameState } from './GameStateContext';
 
 export enum WebSocketEvent {
   CreateRoom = 'Create Room',
@@ -28,13 +29,23 @@ export const useWebSocketContext = () => useContext(WebSocketContext);
 export const WebSocketProvider: FunctionComponent = ({ children }) => {
   const [webSocket, setWebSocket] = useState<SocketIOClient.Socket | null>(null);
   const [joinedRoom, setJoinedRoom] = useState<string | undefined>();
-
+  const { setGameState } = useGameState();
+  console.log('joined room: ', joinedRoom);
   useEffect(() => {
     if (!webSocket) {
       const socket = io.connect('http://localhost:3030');
 
       socket.on('new member', () => console.log('new member'));
-      socket.on('joined room', (data: any) => setJoinedRoom(data.room));
+
+      socket.on('joined room', (data: any) => {
+        setJoinedRoom(data.room);
+        setGameState(GameState.SetPlayerName);
+      });
+
+      socket.on('room does not exist', (data: any) => {
+        alert(`${data.room} does not exist.`);
+      });
+
       setWebSocket(socket);
     }
   }, []);
@@ -47,7 +58,7 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
   );
 
   const enterRoom = useCallback(
-    (roomName: string) => {
+    (roomName: string) => { // TODO: catch error when webSocket connection is not created
       if (webSocket) {
         webSocket.emit(WebSocketEvent.EnterRoom, { roomName });
       }
@@ -56,9 +67,8 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
   );
 
   const createRoom = useCallback(() => {
-    if (webSocket) {
+    if (webSocket) { // TODO: catch error when webSocket connection is not created
       webSocket.emit(WebSocketEvent.CreateRoom);
-      console.log('Create a new room');
     }
   }, [webSocket]);
 

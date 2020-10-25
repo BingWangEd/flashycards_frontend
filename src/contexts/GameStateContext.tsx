@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, FunctionComponent } from 'react';
+import React, { createContext, useContext, useState, FunctionComponent } from 'react';
 
 export enum GameState {
   GetGameRoom,
