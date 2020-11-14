@@ -8,24 +8,45 @@ export enum GameState {
 
 interface IGameStateContext {
   gameState: GameState | undefined;
-  setGameState: (newGameState: GameState) => void;
+  setGameState: React.Dispatch<React.SetStateAction<GameState>> | undefined;
+  roomCode: string | undefined;
+  setRoomCode: React.Dispatch<React.SetStateAction<string>> |undefined;
+  name: string | undefined;
+  setName: React.Dispatch<React.SetStateAction<string>> | undefined;
+  allMembers: string[] | undefined,
+  setAllMembers: React.Dispatch<React.SetStateAction<string[]>> | undefined,
 }
 
 export const GameStateContext = createContext<IGameStateContext>({
   gameState: undefined,
-  setGameState: (newGameState: GameState) => console.log('Calling Game State dummy setGameState.'),
+  setGameState: undefined,
+  roomCode: undefined, 
+  setRoomCode: undefined,
+  name: undefined,
+  setName: undefined,
+  allMembers: undefined,
+  setAllMembers: undefined,
 });
 
 export const useGameState = () => useContext(GameStateContext);
 
 export const GameStateContextProvider: FunctionComponent = ({ children }) => {
   const [gameState, setGameState] = useState<GameState>(GameState.GetGameRoom);
+  const [roomCode, setRoomCode] = useState<string>('');
+  const [name, setName] = useState<string>('');
+  const [allMembers, setAllMembers] = useState<string[]>([]);
 
   return (
     <GameStateContext.Provider
       value={{
         gameState,
         setGameState,
+        roomCode,
+        setRoomCode,
+        name,
+        setName,
+        allMembers,
+        setAllMembers,
       }}
     >
       {children}

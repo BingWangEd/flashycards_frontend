@@ -2,10 +2,18 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Fun
 import { useGameState, GameState } from './GameStateContext';
 
 export enum WebSocketEvent {
-  CreateRoom = 'Create Room',
-  EnterRoom = 'Enter Room',
-  SetName = 'Set Name',
-  SetWords = 'Set Words',
+  CreateRoom = 'create room',
+  EnterRoom = 'enter room',
+  SubmitName = 'submit name',
+  SetWords = 'set words',
+}
+
+enum WebSocketEmissionEvent {
+  GetNewMember = 'got new member',
+  ConfirmRoom = 'confirmed room exists',
+  RejectRoom = 'rejected room exists',
+  JoinRoom = 'joined room',
+  CreateNewRoom = 'created new room',
 }
 
 const io = require('socket.io-client');
@@ -14,53 +22,60 @@ interface IWebSocketContext {
   connected: boolean;
   handleEnterRoom: (roomName: string) => void;
   handleCreateRoom: () => void;
-  handleSetName: (name: string) => void;
+  handleSubmitName: (name: string) => void;
 }
 
 export const WebSocketContext = createContext<IWebSocketContext>({
   connected: false,
   handleEnterRoom: (roomName) => console.log('Call dummy handleEnterRoom.'),
   handleCreateRoom: () => console.log('Call dummy handleCreateRoom.'),
-  handleSetName: (name) => console.log('Call dummy handleSetName.'),
+  handleSubmitName: (name) => console.log('Call dummy handleSubmitName.'),
 });
 
 export const useWebSocketContext = () => useContext(WebSocketContext);
 
 export const WebSocketProvider: FunctionComponent = ({ children }) => {
-  const [webSocket, setWebSocket] = useState<SocketIOClient.Socket | null>(null);
-  const [joinedRoom, setJoinedRoom] = useState<string | undefined>();
-  const { setGameState } = useGameState();
-  console.log('joined room: ', joinedRoom);
+  const [webSocket] = useState<SocketIOClient.Socket | null>(() => io.connect(`http://localhost:${process.env.REACT_APP_BACKEND_PORT}`));
+  const { setGameState, setName, setAllMembers, setRoomCode, roomCode } = useGameState();
+
   useEffect(() => {
-    if (!webSocket) {
-      const socket = io.connect('http://localhost:3030');
-
-      socket.on('new member', () => console.log('new member'));
-
-      socket.on('joined room', (data: any) => {
-        setJoinedRoom(data.room);
-        setGameState(GameState.SetPlayerName);
+    if (webSocket) {
+      webSocket.on(WebSocketEmissionEvent.GetNewMember, ({ allMembers }: { allMembers: string[] }) => {
+        setAllMembers && setAllMembers(allMembers);
       });
-
-      socket.on('room does not exist', (data: any) => {
-        alert(`${data.room} does not exist.`);
+  
+      webSocket.on(WebSocketEmissionEvent.ConfirmRoom, ({ roomCode }: { roomCode: string }) => {
+        setRoomCode && setRoomCode(roomCode);
+        setGameState && setGameState(GameState.SetPlayerName);
       });
-
-      setWebSocket(socket);
+  
+      webSocket.on(WebSocketEmissionEvent.RejectRoom, ({roomCode}: { roomCode: string }) => {
+        alert(`${roomCode} does not exist.`);
+      });
+  
+      webSocket.on(WebSocketEmissionEvent.CreateNewRoom, ({roomCode}: { roomCode: string }) => {
+        setRoomCode && setRoomCode(roomCode);
+        setGameState && setGameState(GameState.SetPlayerName);
+      })
+  
+      webSocket.on(WebSocketEmissionEvent.JoinRoom, ({ name }: { name: string }) => {
+        setName && setName(name);
+        setGameState && setGameState(GameState.WaitForMembers);
+      })
     }
-  }, []);
+  }, [webSocket, setAllMembers, setGameState, setName, setRoomCode]);
 
-  const setName = useCallback(
+  const submitName = useCallback(
     (name: string) => {
-      webSocket && webSocket.emit(WebSocketEvent.SetName, { name }, () => console.log('Recorded name'));
+      webSocket && webSocket.emit(WebSocketEvent.SubmitName, { name, roomCode });
     },
-    [webSocket],
+    [webSocket, roomCode],
   );
 
   const enterRoom = useCallback(
-    (roomName: string) => { // TODO: catch error when webSocket connection is not created
+    (roomCode: string) => { // TODO: catch error when webSocket connection is not created
       if (webSocket) {
-        webSocket.emit(WebSocketEvent.EnterRoom, { roomName });
+        webSocket.emit(WebSocketEvent.EnterRoom, { roomCode });
       }
     },
     [webSocket],
@@ -78,7 +93,7 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
         connected: webSocket !== null,
         handleEnterRoom: enterRoom,
         handleCreateRoom: createRoom,
-        handleSetName: setName,
+        handleSubmitName: submitName,
       }}
     >
       {children}

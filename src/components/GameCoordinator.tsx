@@ -1,6 +1,8 @@
 import React from 'react';
 import { useGameState, GameState } from '../contexts/GameStateContext';
-import GetGameRoom from './GetGameRoom/GetGameRoom';
+import GetGameRoom from './GetGameRoom';
+import EnterPlayerName from './EnterPlayerName';
+import WaitForMembers from './WaitForMembers';
 
 const GameCoordinator = () => {
   const { gameState } = useGameState();
@@ -9,7 +11,9 @@ const GameCoordinator = () => {
     case GameState.GetGameRoom:
       return <GetGameRoom />;
     case GameState.SetPlayerName:
-      return <div>Set player name</div>;
+      return <EnterPlayerName />;
+    case GameState.WaitForMembers:
+      return <WaitForMembers />;
     default:
       return <div>something is wrong</div>;
   }

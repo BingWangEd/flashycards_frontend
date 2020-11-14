@@ -1,18 +1,16 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import InputBox from '../../UIUnits/InputBox';
 import CreateRoom from './CreateRoom';
-import { useGameState } from '../../contexts/GameStateContext';
 
 const GetGameRoom = () => {
   const { handleEnterRoom } = useWebSocketContext();
-  const { setGameState } = useGameState();
 
-  const handleSubmit = (value: string) => {
-    handleEnterRoom(value);
-  }
+  const handleSubmit = useCallback((value: string) => {
+    handleEnterRoom(value)
+  }, [handleEnterRoom]);
 
-  return(
+  return (
     <div>
       <InputBox
         label={'Enter A Room You Want to Join'}
