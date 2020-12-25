@@ -3,11 +3,11 @@ import InputBox from '../../UIUnits/InputBox';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 
 const EnterPlayerName = () => {
-  const { handleSubmitName } = useWebSocketContext();
+  const { submitName } = useWebSocketContext();
 
   const handleSubmit = useCallback((value: string) => {
-    handleSubmitName(value)
-  }, [handleSubmitName]);
+    submitName(value)
+  }, [submitName]);
 
   return (
     <div>

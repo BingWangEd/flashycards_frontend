@@ -3,15 +3,16 @@ import { useGameState } from '../../contexts/GameStateContext';
 
 const WaitForMembers = () => {
   // get all memebers
-  const { allMembers, roomCode } = useGameState();
-
+  const { allMembers, roomCode, name } = useGameState();
   return (
     <div>
-      <h3>Room you are in {roomCode}</h3>
+      <h3>You are in Room {roomCode}</h3>
       You are joining following members in this game!
       {
-        allMembers && allMembers.map((member: string) => <h4>{member}</h4>)
-      }
+        allMembers && allMembers.map((member: string) => {
+          if (member !== name)
+        return (<h4>{member}</h4>)
+      })}
     </div>
   )
 }
