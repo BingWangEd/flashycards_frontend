@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, FunctionComponent } from 'react';
-import { useGameState, GameState } from './GameStateContext';
+import { useGameState, GameState, PlayerRole } from './GameStateContext';
 
 // Events sent to websocket
 export enum WebSocketEvent {
@@ -39,7 +39,7 @@ export const useWebSocketContext = () => useContext(WebSocketContext);
 
 export const WebSocketProvider: FunctionComponent = ({ children }) => {
   const [socketIO, setSocketIO] = useState<SocketIOClient.Socket | undefined>();
-  const {setGameState, setName, setAllMembers, setRoomCode, roomCode} = useGameState();
+  const {setGameState, setName, setAllMembers, setRoomCode, roomCode, playerRole, setPlayerRole} = useGameState();
 
   const connectToWebSocket = useCallback(() => {
     return new Promise<SocketIOClient.Socket>((resolve, reject) => {
@@ -82,21 +82,25 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
 
   const submitName = useCallback(
     (name: string) => {
-      socketIO && socketIO.emit(WebSocketEvent.SubmitName, { name, roomCode });
+      socketIO && socketIO.emit(WebSocketEvent.SubmitName, { name, roomCode, playerRole });
     },
-    [socketIO, roomCode],
+    [socketIO, roomCode, playerRole],
   );
 
   const enterRoom = useCallback(
     async (roomCode: string) => { // TODO: catch error when webSocket connection is not created
+      const role = playerRole ? playerRole : PlayerRole.Student;
       if (socketIO) {
         socketIO.emit(WebSocketEvent.EnterRoom, { roomCode });
       } else {
         const socket = await connectToWebSocket();
         socket.emit(WebSocketEvent.EnterRoom, { roomCode });
       }
+      if (!playerRole) {
+        setPlayerRole && setPlayerRole(role);
+      }
     },
-    [socketIO, connectToWebSocket],
+    [socketIO, connectToWebSocket, setPlayerRole, playerRole],
   );
 
   const createRoom = useCallback(async () => {
@@ -106,7 +110,8 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
       const socket = await connectToWebSocket();
       socket.emit(WebSocketEvent.CreateRoom);
     }
-  }, [socketIO, connectToWebSocket]);
+    setPlayerRole && setPlayerRole(PlayerRole.Teacher);
+  }, [socketIO, connectToWebSocket, setPlayerRole]);
 
   return (
     <WebSocketContext.Provider

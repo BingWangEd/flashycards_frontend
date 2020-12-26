@@ -6,6 +6,11 @@ export enum GameState {
   WaitForMembers,
 }
 
+export enum PlayerRole {
+  Teacher = 'teacher',
+  Student = 'student',
+}
+
 interface IGameStateContext {
   gameState: GameState | undefined;
   setGameState: React.Dispatch<React.SetStateAction<GameState>> | undefined;
@@ -15,6 +20,8 @@ interface IGameStateContext {
   setName: React.Dispatch<React.SetStateAction<string>> | undefined;
   allMembers: string[] | undefined,
   setAllMembers: React.Dispatch<React.SetStateAction<string[]>> | undefined,
+  playerRole: string | undefined,
+  setPlayerRole: React.Dispatch<React.SetStateAction<string | undefined>> | undefined,
 }
 
 export const GameStateContext = createContext<IGameStateContext>({
@@ -26,6 +33,8 @@ export const GameStateContext = createContext<IGameStateContext>({
   setName: undefined,
   allMembers: undefined,
   setAllMembers: undefined,
+  playerRole: undefined,
+  setPlayerRole: undefined,
 });
 
 export const useGameState = () => useContext(GameStateContext);
@@ -35,6 +44,7 @@ export const GameStateContextProvider: FunctionComponent = ({ children }) => {
   const [roomCode, setRoomCode] = useState<string>('');
   const [name, setName] = useState<string>('');
   const [allMembers, setAllMembers] = useState<string[]>([]);
+  const [playerRole, setPlayerRole] = useState<string | undefined>(undefined);
 
   return (
     <GameStateContext.Provider
@@ -47,6 +57,8 @@ export const GameStateContextProvider: FunctionComponent = ({ children }) => {
         setName,
         allMembers,
         setAllMembers,
+        playerRole,
+        setPlayerRole,
       }}
     >
       {children}
