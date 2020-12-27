@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, FunctionComponent } from 'react';
 
 export enum TextareaVariant {
   Small,
@@ -14,15 +14,18 @@ interface IProps {
   title?: string;
 }
 
-const Textarea = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
+const Textarea: FunctionComponent<IProps> = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
   const [value, setValue] = useState<string>('');
-  const styleByVariant = variant === TextareaVariant.Big ? {
-    width: '500px',
-    height: '500px',
-  } : {
-    width: '300px',
-    height: '200px',
-  }
+  const styleByVariant =
+    variant === TextareaVariant.Big
+      ? {
+          width: '500px',
+          height: '500px',
+        }
+      : {
+          width: '300px',
+          height: '200px',
+        };
   const style = {
     inputEffect: {
       border: 0,

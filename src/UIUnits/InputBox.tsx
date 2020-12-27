@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, FunctionComponent } from 'react';
 
 export enum InputBoxVariant {
   Small,
@@ -14,13 +14,16 @@ interface IProps {
   title?: string;
 }
 
-const InputBox = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
+const InputBox: FunctionComponent<IProps> = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
   const [value, setValue] = useState<string>('');
-  const styleByVariant = variant === InputBoxVariant.Big ? {
-    width: '500px',
-  } : {
-    width: '300px',
-  }
+  const styleByVariant =
+    variant === InputBoxVariant.Big
+      ? {
+          width: '500px',
+        }
+      : {
+          width: '300px',
+        };
   const style = {
     inputEffect: {
       border: 0,

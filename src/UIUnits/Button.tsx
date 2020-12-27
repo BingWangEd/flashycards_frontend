@@ -1,4 +1,4 @@
-import React from "react";
+import React, { FunctionComponent } from 'react';
 
 interface IProps {
   label: string;
@@ -6,7 +6,7 @@ interface IProps {
   type?: React.ButtonHTMLAttributes<HTMLButtonElement>['type'];
 }
 
-const Button = ({ label, onClick, ...props }: IProps) => {
+const Button: FunctionComponent<IProps> = ({ label, onClick, ...props }: IProps) => {
   const style = {
     button: {
       height: '4em',
@@ -19,11 +19,7 @@ const Button = ({ label, onClick, ...props }: IProps) => {
   };
 
   return (
-    <button
-      onClick={onClick}
-      style={style.button}
-      {...props}
-    >
+    <button onClick={onClick} style={style.button} {...props}>
       {label}
     </button>
   );

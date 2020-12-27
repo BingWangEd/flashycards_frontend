@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { useGameState, GameState } from '../contexts/GameStateContext';
 import GetGameRoom from './GetGameRoom';
 import EnterPlayerName from './EnterPlayerName';
 import WaitForMembers from './WaitForMembers';
 
-const GameCoordinator = () => {
+const GameCoordinator: FunctionComponent = () => {
   const { gameState } = useGameState();
 
   switch (gameState) {

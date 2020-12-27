@@ -1,10 +1,9 @@
-export const parseGameWords = (words: string) => {
-  return words.split(/\r?\n/).map(word => {
-    const wordArray = word.split('#');
-    if (wordArray.length !== 2) {
-      console.log(`This line does not follow the format: ${word}`);
-      return;
-    }
-    return [wordArray[0].trim(), wordArray[1].trim()];
-  });
+export const parseGameWords: (words: string) => Array<[string, string]> = (words: string) => {
+  return words
+    .split(/\r?\n/)
+    .filter(word => word.split('#').length === 2)
+    .map(word => {
+      const wordArray = word.split('#');
+      return [wordArray[0].trim(), wordArray[1].trim()];
+    });
 };

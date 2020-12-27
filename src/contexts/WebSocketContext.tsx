@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, FunctionComponent } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useGameState, GameState, PlayerRole } from './GameStateContext';
+import io from 'socket.io-client';
 
 // Events sent to websocket
 export enum WebSocketEvent {
@@ -19,29 +20,37 @@ enum WebSocketEmissionEvent {
   CreateNewRoom = 'created new room',
 }
 
-const io = require('socket.io-client');
-
 interface IWebSocketContext {
   connected: boolean;
   enterRoom: (roomName: string) => void;
   createRoom: () => void;
-  submitName: (name: string) => void;
-  setWords: (words: [string, string][]) => void;
+  submitName: (playerName: string) => void;
+  setWords: (words: Array<[string, string]>) => void;
 }
 
 export const WebSocketContext = createContext<IWebSocketContext>({
   connected: false,
-  enterRoom: (roomName) => console.log('Calling dummy enterRoom.'),
+  enterRoom: roomName => console.log('Calling dummy enterRoom.'),
   createRoom: () => console.log('Calling dummy CreateRoom.'),
-  submitName: (name) => console.log('Calling dummy submitName.'),
-  setWords: (words) => console.log('Calling dummy setWords.'),
+  submitName: playerName => console.log('Calling dummy submitName.'),
+  setWords: words => console.log('Calling dummy setWords.'),
 });
 
-export const useWebSocketContext = () => useContext(WebSocketContext);
-
-export const WebSocketProvider: FunctionComponent = ({ children }) => {
+export const useWebSocketContext: () => IWebSocketContext = () => useContext(WebSocketContext);
+interface IProp {
+  children: ReactNode;
+}
+export const WebSocketProvider = ({ children }: IProp) => {
   const [socketIO, setSocketIO] = useState<SocketIOClient.Socket | undefined>();
-  const { setGameState, setName, setAllMembers, setRoomCode, roomCode, playerRole, setPlayerRole } = useGameState();
+  const {
+    setGameState,
+    setPlayerName,
+    setAllMembers,
+    setRoomCode,
+    roomCode,
+    playerRole,
+    setPlayerRole,
+  } = useGameState();
 
   const connectToWebSocket = useCallback(() => {
     return new Promise<SocketIOClient.Socket>((resolve, reject) => {
@@ -66,8 +75,8 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
           setGameState && setGameState(GameState.SetPlayerName);
         });
 
-        webSocket.on(WebSocketEmissionEvent.JoinRoom, ({ name }: { name: string }) => {
-          setName && setName(name);
+        webSocket.on(WebSocketEmissionEvent.JoinRoom, ({ playerName }: { playerName: string }) => {
+          setPlayerName && setPlayerName(playerName);
           setGameState && setGameState(GameState.WaitForMembers);
         });
 
@@ -80,11 +89,11 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
         resolve(socketIO);
       }
     });
-  }, [socketIO, setAllMembers, setGameState, setName, setRoomCode]);
+  }, [socketIO, setAllMembers, setGameState, setPlayerName, setRoomCode]);
 
   const submitName = useCallback(
-    (name: string) => {
-      socketIO && socketIO.emit(WebSocketEvent.SubmitName, { name, roomCode, playerRole });
+    (playerName: string) => {
+      socketIO && socketIO.emit(WebSocketEvent.SubmitName, { playerName, roomCode, playerRole });
     },
     [socketIO, roomCode, playerRole],
   );
@@ -118,7 +127,7 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
   }, [socketIO, connectToWebSocket, setPlayerRole]);
 
   const setWords = useCallback(
-    (words: [string, string][]) => {
+    (words: Array<[string, string]>) => {
       if (socketIO) {
         socketIO.emit(WebSocketEvent.SetWords, words);
       }
