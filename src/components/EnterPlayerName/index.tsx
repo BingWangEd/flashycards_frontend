@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
-import InputBox from '../../UIUnits/InputBox';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import InputBox from '../../uiUnits/InputBox';
 
 const EnterPlayerName = () => {
   const { submitName } = useWebSocketContext();

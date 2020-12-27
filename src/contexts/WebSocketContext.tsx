@@ -26,6 +26,7 @@ interface IWebSocketContext {
   enterRoom: (roomName: string) => void;
   createRoom: () => void;
   submitName: (name: string) => void;
+  setWords: (words: [string, string][]) => void;
 }
 
 export const WebSocketContext = createContext<IWebSocketContext>({
@@ -33,13 +34,14 @@ export const WebSocketContext = createContext<IWebSocketContext>({
   enterRoom: (roomName) => console.log('Calling dummy enterRoom.'),
   createRoom: () => console.log('Calling dummy CreateRoom.'),
   submitName: (name) => console.log('Calling dummy submitName.'),
+  setWords: (words) => console.log('Calling dummy setWords.'),
 });
 
 export const useWebSocketContext = () => useContext(WebSocketContext);
 
 export const WebSocketProvider: FunctionComponent = ({ children }) => {
   const [socketIO, setSocketIO] = useState<SocketIOClient.Socket | undefined>();
-  const {setGameState, setName, setAllMembers, setRoomCode, roomCode, playerRole, setPlayerRole} = useGameState();
+  const { setGameState, setName, setAllMembers, setRoomCode, roomCode, playerRole, setPlayerRole } = useGameState();
 
   const connectToWebSocket = useCallback(() => {
     return new Promise<SocketIOClient.Socket>((resolve, reject) => {
@@ -49,21 +51,21 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
         webSocket.on(WebSocketEmissionEvent.GetNewMember, ({ allMembers }: { allMembers: string[] }) => {
           setAllMembers && setAllMembers(allMembers);
         });
-    
+
         webSocket.on(WebSocketEmissionEvent.ConfirmRoom, ({ roomCode }: { roomCode: string }) => {
           setRoomCode && setRoomCode(roomCode);
           setGameState && setGameState(GameState.SetPlayerName);
         });
-    
-        webSocket.on(WebSocketEmissionEvent.RejectRoom, ({roomCode}: { roomCode: string }) => {
+
+        webSocket.on(WebSocketEmissionEvent.RejectRoom, ({ roomCode }: { roomCode: string }) => {
           alert(`${roomCode} does not exist.`);
         });
-    
-        webSocket.on(WebSocketEmissionEvent.CreateNewRoom, ({roomCode}: { roomCode: string }) => {
+
+        webSocket.on(WebSocketEmissionEvent.CreateNewRoom, ({ roomCode }: { roomCode: string }) => {
           setRoomCode && setRoomCode(roomCode);
           setGameState && setGameState(GameState.SetPlayerName);
         });
-    
+
         webSocket.on(WebSocketEmissionEvent.JoinRoom, ({ name }: { name: string }) => {
           setName && setName(name);
           setGameState && setGameState(GameState.WaitForMembers);
@@ -88,7 +90,8 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
   );
 
   const enterRoom = useCallback(
-    async (roomCode: string) => { // TODO: catch error when webSocket connection is not created
+    async (roomCode: string) => {
+      // TODO: catch error when webSocket connection is not created
       const role = playerRole ? playerRole : PlayerRole.Student;
       if (socketIO) {
         socketIO.emit(WebSocketEvent.EnterRoom, { roomCode });
@@ -104,7 +107,8 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
   );
 
   const createRoom = useCallback(async () => {
-    if (socketIO) { // TODO: catch error when webSocket connection is not created
+    if (socketIO) {
+      // TODO: catch error when webSocket connection is not created
       socketIO.emit(WebSocketEvent.CreateRoom);
     } else {
       const socket = await connectToWebSocket();
@@ -113,6 +117,15 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
     setPlayerRole && setPlayerRole(PlayerRole.Teacher);
   }, [socketIO, connectToWebSocket, setPlayerRole]);
 
+  const setWords = useCallback(
+    (words: [string, string][]) => {
+      if (socketIO) {
+        socketIO.emit(WebSocketEvent.SetWords, words);
+      }
+    },
+    [socketIO],
+  );
+
   return (
     <WebSocketContext.Provider
       value={{
@@ -120,6 +133,7 @@ export const WebSocketProvider: FunctionComponent = ({ children }) => {
         enterRoom,
         createRoom,
         submitName,
+        setWords,
       }}
     >
       {children}

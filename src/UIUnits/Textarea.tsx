@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 
-export enum InputBoxVariant {
+export enum TextareaVariant {
   Small,
   Big,
 }
@@ -9,29 +9,32 @@ interface IProps {
   label: string;
   onSubmit?: (value: string) => void;
   onChange?: (value: string) => void;
-  variant?: InputBoxVariant;
+  variant?: TextareaVariant;
   pattern?: string;
   title?: string;
 }
 
-const InputBox = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
+const Textarea = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
   const [value, setValue] = useState<string>('');
-  const styleByVariant = variant === InputBoxVariant.Big ? {
+  const styleByVariant = variant === TextareaVariant.Big ? {
     width: '500px',
+    height: '500px',
   } : {
     width: '300px',
+    height: '200px',
   }
   const style = {
     inputEffect: {
       border: 0,
       padding: '7px',
-      borderBottom: '1px solid #ccc',
+      borderTop: '1px solid #ccc',
+      borderLeft: '1px solid #ccc',
       overflow: 'scroll',
       ...styleByVariant,
     },
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValue(e.target.value);
     onChange && onChange(e.target.value);
   };
@@ -47,9 +50,8 @@ const InputBox = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
 
   return (
     <div>
-      <input
+      <textarea
         style={style.inputEffect}
-        type="text"
         placeholder={label}
         onKeyDown={handleEnter}
         onChange={handleChange}
@@ -59,4 +61,4 @@ const InputBox = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
   );
 };
 
-export default InputBox;
+export default Textarea;

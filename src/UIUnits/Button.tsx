@@ -1,15 +1,16 @@
-import React from 'react';
+import React from "react";
 
 interface IProps {
   label: string;
   onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  type?: React.ButtonHTMLAttributes<HTMLButtonElement>['type'];
 }
 
-const Button = ({ label, onClick }: IProps) => {
+const Button = ({ label, onClick, ...props }: IProps) => {
   const style = {
     button: {
       height: '4em',
-      width: '10%',
+      width: '20%',
       padding: '1.5em auto',
       margin: '1em auto',
       backgroundColor: 'white',
@@ -18,7 +19,11 @@ const Button = ({ label, onClick }: IProps) => {
   };
 
   return (
-    <button onClick={onClick} style={style.button}>
+    <button
+      onClick={onClick}
+      style={style.button}
+      {...props}
+    >
       {label}
     </button>
   );
