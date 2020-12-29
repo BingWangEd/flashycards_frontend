@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export enum GameState {
+export enum RoomState {
   GetGameRoom,
   SetPlayerName,
   WaitForMembers,
+  PlayGame,
 }
 
 export enum PlayerRole {
@@ -11,9 +12,9 @@ export enum PlayerRole {
   Student = 'student',
 }
 
-interface IGameStateContext {
-  gameState: GameState | undefined;
-  setGameState: React.Dispatch<React.SetStateAction<GameState>> | undefined;
+interface IRoomStateContext {
+  roomState: RoomState | undefined;
+  setRoomState: React.Dispatch<React.SetStateAction<RoomState>> | undefined;
   roomCode: string | undefined;
   setRoomCode: React.Dispatch<React.SetStateAction<string>> | undefined;
   playerName: string | undefined;
@@ -24,9 +25,9 @@ interface IGameStateContext {
   setPlayerRole: React.Dispatch<React.SetStateAction<string | undefined>> | undefined;
 }
 
-export const GameStateContext = createContext<IGameStateContext>({
-  gameState: undefined,
-  setGameState: undefined,
+export const RoomStateContext = createContext<IRoomStateContext>({
+  roomState: undefined,
+  setRoomState: undefined,
   roomCode: undefined,
   setRoomCode: undefined,
   playerName: undefined,
@@ -37,20 +38,20 @@ export const GameStateContext = createContext<IGameStateContext>({
   setPlayerRole: undefined,
 });
 
-export const useGameState: () => IGameStateContext = () => useContext(GameStateContext);
+export const useRoomState: () => IRoomStateContext = () => useContext(RoomStateContext);
 
-export const GameStateContextProvider = ({ children }: { children: ReactNode }) => {
-  const [gameState, setGameState] = useState<GameState>(GameState.GetGameRoom);
+export const RoomStateContextProvider = ({ children }: { children: ReactNode }) => {
+  const [roomState, setRoomState] = useState<RoomState>(RoomState.GetGameRoom);
   const [roomCode, setRoomCode] = useState<string>('');
   const [playerName, setPlayerName] = useState<string>('');
   const [allMembers, setAllMembers] = useState<string[]>([]);
   const [playerRole, setPlayerRole] = useState<string | undefined>(undefined);
 
   return (
-    <GameStateContext.Provider
+    <RoomStateContext.Provider
       value={{
-        gameState,
-        setGameState,
+        roomState,
+        setRoomState,
         roomCode,
         setRoomCode,
         playerName,
@@ -62,6 +63,6 @@ export const GameStateContextProvider = ({ children }: { children: ReactNode }) 
       }}
     >
       {children}
-    </GameStateContext.Provider>
+    </RoomStateContext.Provider>
   );
 };

@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useState } from 'react';
-import { useGameState, PlayerRole } from '../../contexts/GameStateContext';
+import { useRoomState, PlayerRole } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import Button from '../../uiUnits/Button';
 import Textarea from '../../uiUnits/Textarea';
@@ -7,7 +7,7 @@ import { parseGameWords } from '../../utils/utils';
 
 const WaitForMembers: FunctionComponent = () => {
   // get all memebers
-  const { allMembers, roomCode, playerName, playerRole } = useGameState();
+  const { allMembers, roomCode, playerName, playerRole } = useRoomState();
   const { setWords: setGameWords } = useWebSocketContext();
   const [words, setWords] = useState<string>();
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { useGameState, GameState, PlayerRole } from './GameStateContext';
+import { useRoomState, RoomState, PlayerRole } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
 import { CardState, Game, WordCard } from '../objects/Game';
@@ -46,14 +46,14 @@ interface IProp {
 export const WebSocketProvider = ({ children }: IProp) => {
   const [socketIO, setSocketIO] = useState<SocketIOClient.Socket | undefined>();
   const {
-    setGameState,
+    setRoomState,
     setPlayerName,
     setAllMembers,
     setRoomCode,
     roomCode,
     playerRole,
     setPlayerRole,
-  } = useGameState();
+  } = useRoomState();
 
   const connectToWebSocket = useCallback(() => {
     return new Promise<SocketIOClient.Socket>((resolve, reject) => {
@@ -66,7 +66,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
 
         webSocket.on(WebSocketEmissionEvent.ConfirmRoom, ({ roomCode }: { roomCode: string }) => {
           setRoomCode && setRoomCode(roomCode);
-          setGameState && setGameState(GameState.SetPlayerName);
+          setRoomState && setRoomState(RoomState.SetPlayerName);
         });
 
         webSocket.on(WebSocketEmissionEvent.RejectRoom, ({ roomCode }: { roomCode: string }) => {
@@ -75,12 +75,12 @@ export const WebSocketProvider = ({ children }: IProp) => {
 
         webSocket.on(WebSocketEmissionEvent.CreateNewRoom, ({ roomCode }: { roomCode: string }) => {
           setRoomCode && setRoomCode(roomCode);
-          setGameState && setGameState(GameState.SetPlayerName);
+          setRoomState && setRoomState(RoomState.SetPlayerName);
         });
 
         webSocket.on(WebSocketEmissionEvent.JoinRoom, ({ playerName }: { playerName: string }) => {
           setPlayerName && setPlayerName(playerName);
-          setGameState && setGameState(GameState.WaitForMembers);
+          setRoomState && setRoomState(RoomState.WaitForMembers);
         });
 
         webSocket.on(WebSocketEmissionEvent.Connect, () => {
@@ -93,6 +93,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
           WebSocketEmissionEvent.StartGame,
           ({ shuffledWords, cardStates }: { shuffledWords: List<WordCard>; cardStates: List<CardState> }) => {
             const game = new Game(shuffledWords, cardStates);
+            setRoomState && setRoomState(RoomState.PlayGame);
             console.log('game.shuffledWords', game.shuffledWords);
             console.log('game.cardStates', game.cardStates);
           },
@@ -101,7 +102,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
         resolve(socketIO);
       }
     });
-  }, [socketIO, setAllMembers, setGameState, setPlayerName, setRoomCode]);
+  }, [socketIO, setAllMembers, setRoomState, setPlayerName, setRoomCode]);
 
   const submitName = useCallback(
     (playerName: string) => {

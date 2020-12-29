@@ -1,19 +1,22 @@
 import React, { FunctionComponent } from 'react';
-import { useGameState, GameState } from '../contexts/GameStateContext';
+import { useRoomState, RoomState } from '../contexts/RoomStateContext';
 import GetGameRoom from './GetGameRoom';
 import EnterPlayerName from './EnterPlayerName';
 import WaitForMembers from './WaitForMembers';
+import PlayGame from './PlayGame';
 
 const GameCoordinator: FunctionComponent = () => {
-  const { gameState } = useGameState();
+  const { roomState } = useRoomState();
 
-  switch (gameState) {
-    case GameState.GetGameRoom:
+  switch (roomState) {
+    case RoomState.GetGameRoom:
       return <GetGameRoom />;
-    case GameState.SetPlayerName:
+    case RoomState.SetPlayerName:
       return <EnterPlayerName />;
-    case GameState.WaitForMembers:
+    case RoomState.WaitForMembers:
       return <WaitForMembers />;
+    case RoomState.PlayGame:
+      return <PlayGame />;
     default:
       return <div>something is wrong</div>;
   }
