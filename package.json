@@ -18,6 +18,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "immutable": "^4.0.0-rc.12",
     "prettier": "^2.1.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -30,9 +31,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "yarn run eslint",
+    "lint": "npm run eslint",
     "eslint": "eslint --ext js,ts,tsx ./",
-    "lint:fix": "yarn run lint --fix",
+    "lint:fix": "npm run lint --fix",
     "generate:enums": "node ./scripts/generateEnums"
   },
   "browserslist": {

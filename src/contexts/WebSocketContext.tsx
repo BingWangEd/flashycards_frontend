@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useGameState, GameState, PlayerRole } from './GameStateContext';
 import io from 'socket.io-client';
+import { List } from 'immutable';
+import { CardState, Game, WordCard } from '../objects/Game';
 
 // Events sent to websocket
 export enum WebSocketEvent {
@@ -18,11 +20,12 @@ enum WebSocketEmissionEvent {
   RejectRoom = 'rejected room exists',
   JoinRoom = 'joined room',
   CreateNewRoom = 'created new room',
+  StartGame = 'started game',
 }
 
 interface IWebSocketContext {
   connected: boolean;
-  enterRoom: (roomName: string) => void;
+  enterRoom: (roomCode: string) => void;
   createRoom: () => void;
   submitName: (playerName: string) => void;
   setWords: (words: Array<[string, string]>) => void;
@@ -30,7 +33,7 @@ interface IWebSocketContext {
 
 export const WebSocketContext = createContext<IWebSocketContext>({
   connected: false,
-  enterRoom: roomName => console.log('Calling dummy enterRoom.'),
+  enterRoom: roomCode => console.log('Calling dummy enterRoom.'),
   createRoom: () => console.log('Calling dummy CreateRoom.'),
   submitName: playerName => console.log('Calling dummy submitName.'),
   setWords: words => console.log('Calling dummy setWords.'),
@@ -85,6 +88,15 @@ export const WebSocketProvider = ({ children }: IProp) => {
           setSocketIO(webSocket);
           resolve(webSocket);
         });
+
+        webSocket.on(
+          WebSocketEmissionEvent.StartGame,
+          ({ shuffledWords, cardStates }: { shuffledWords: List<WordCard>; cardStates: List<CardState> }) => {
+            const game = new Game(shuffledWords, cardStates);
+            console.log('game.shuffledWords', game.shuffledWords);
+            console.log('game.cardStates', game.cardStates);
+          },
+        );
       } else {
         resolve(socketIO);
       }
@@ -129,10 +141,11 @@ export const WebSocketProvider = ({ children }: IProp) => {
   const setWords = useCallback(
     (words: Array<[string, string]>) => {
       if (socketIO) {
-        socketIO.emit(WebSocketEvent.SetWords, words);
+        console.log('emit set words: ', words);
+        socketIO.emit(WebSocketEvent.SetWords, { words, roomCode });
       }
     },
-    [socketIO],
+    [socketIO, roomCode],
   );
 
   return (

@@ -1,5 +1,6 @@
 import React, { FunctionComponent, useCallback, useState } from 'react';
 import { useGameState, PlayerRole } from '../../contexts/GameStateContext';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import Button from '../../uiUnits/Button';
 import Textarea from '../../uiUnits/Textarea';
 import { parseGameWords } from '../../utils/utils';
@@ -7,6 +8,7 @@ import { parseGameWords } from '../../utils/utils';
 const WaitForMembers: FunctionComponent = () => {
   // get all memebers
   const { allMembers, roomCode, playerName, playerRole } = useGameState();
+  const { setWords: setGameWords } = useWebSocketContext();
   const [words, setWords] = useState<string>();
 
   const handleSubmitWordsStartGame = useCallback(() => {
@@ -17,9 +19,8 @@ const WaitForMembers: FunctionComponent = () => {
     }
 
     const parsedWords = parseGameWords(words);
-
-    console.log(parsedWords);
-  }, [words]);
+    setGameWords(parsedWords);
+  }, [words, setGameWords]);
 
   const handleInputChange = useCallback(
     (value: string) => {
@@ -35,13 +36,14 @@ const WaitForMembers: FunctionComponent = () => {
         <Textarea
           label={"Enter the words you'd like to practice"}
           onChange={handleInputChange}
-          pattern="/^([^-\n]*-[^-\n]*)\n{1,}([^-\n]*-[^-\n]*)$/"
+          pattern="/^([^-\n]*-[^-\n]*)\n{7,}([^-\n]*-[^-\n]*)$/"
           title="To submit words for practice you need to follow the format"
         />
         <Button label={'Submit the Words and Start Game'} onClick={handleSubmitWordsStartGame} type="submit" />
       </div>
     );
   }
+
   return (
     <div>
       <h3>You are in Room {roomCode}</h3>
