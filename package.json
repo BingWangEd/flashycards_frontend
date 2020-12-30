@@ -31,9 +31,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "npm run eslint",
+    "lint": "yarn run eslint",
     "eslint": "eslint --ext js,ts,tsx ./",
-    "lint:fix": "npm run lint --fix",
+    "lint:fix": "yarn run lint --fix",
     "generate:enums": "node ./scripts/generateEnums"
   },
   "browserslist": {

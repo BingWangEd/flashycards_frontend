@@ -3,6 +3,7 @@ import { useRoomState, RoomState, PlayerRole } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
 import { CardState, Game, WordCard } from '../objects/Game';
+import { useGame } from './GameContext';
 
 // Events sent to websocket
 export enum WebSocketEvent {
@@ -23,12 +24,23 @@ enum WebSocketEmissionEvent {
   StartGame = 'started game',
 }
 
+enum ActionType {
+  FlipCard = 'flip card',
+}
+
+interface ICardAction {
+  type: ActionType;
+  position: number;
+  player: string;
+}
+
 interface IWebSocketContext {
   connected: boolean;
   enterRoom: (roomCode: string) => void;
   createRoom: () => void;
   submitName: (playerName: string) => void;
   setWords: (words: Array<[string, string]>) => void;
+  sendAction: (action: ICardAction) => void;
 }
 
 export const WebSocketContext = createContext<IWebSocketContext>({
@@ -37,6 +49,7 @@ export const WebSocketContext = createContext<IWebSocketContext>({
   createRoom: () => console.log('Calling dummy CreateRoom.'),
   submitName: playerName => console.log('Calling dummy submitName.'),
   setWords: words => console.log('Calling dummy setWords.'),
+  sendAction: action => console.log('Calling dummy sendAction.'),
 });
 
 export const useWebSocketContext: () => IWebSocketContext = () => useContext(WebSocketContext);
@@ -54,6 +67,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
     playerRole,
     setPlayerRole,
   } = useRoomState();
+  const { setGame } = useGame();
 
   const connectToWebSocket = useCallback(() => {
     return new Promise<SocketIOClient.Socket>((resolve, reject) => {
@@ -73,10 +87,13 @@ export const WebSocketProvider = ({ children }: IProp) => {
           alert(`${roomCode} does not exist.`);
         });
 
-        webSocket.on(WebSocketEmissionEvent.CreateNewRoom, ({ roomCode }: { roomCode: string }) => {
-          setRoomCode && setRoomCode(roomCode);
-          setRoomState && setRoomState(RoomState.SetPlayerName);
-        });
+        webSocket.on(
+          WebSocketEmissionEvent.CreateNewRoom,
+          ({ roomCode, list }: { roomCode: string; list: List<number> }) => {
+            setRoomCode && setRoomCode(roomCode);
+            setRoomState && setRoomState(RoomState.SetPlayerName);
+          },
+        );
 
         webSocket.on(WebSocketEmissionEvent.JoinRoom, ({ playerName }: { playerName: string }) => {
           setPlayerName && setPlayerName(playerName);
@@ -92,17 +109,16 @@ export const WebSocketProvider = ({ children }: IProp) => {
         webSocket.on(
           WebSocketEmissionEvent.StartGame,
           ({ shuffledWords, cardStates }: { shuffledWords: List<WordCard>; cardStates: List<CardState> }) => {
-            const game = new Game(shuffledWords, cardStates);
+            const game = new Game(List(shuffledWords), List(cardStates));
+            setGame && setGame(game);
             setRoomState && setRoomState(RoomState.PlayGame);
-            console.log('game.shuffledWords', game.shuffledWords);
-            console.log('game.cardStates', game.cardStates);
           },
         );
       } else {
         resolve(socketIO);
       }
     });
-  }, [socketIO, setAllMembers, setRoomState, setPlayerName, setRoomCode]);
+  }, [socketIO, setAllMembers, setRoomState, setPlayerName, setRoomCode, setGame]);
 
   const submitName = useCallback(
     (playerName: string) => {
@@ -142,11 +158,19 @@ export const WebSocketProvider = ({ children }: IProp) => {
   const setWords = useCallback(
     (words: Array<[string, string]>) => {
       if (socketIO) {
-        console.log('emit set words: ', words);
         socketIO.emit(WebSocketEvent.SetWords, { words, roomCode });
       }
     },
     [socketIO, roomCode],
+  );
+
+  const sendAction = useCallback(
+    (action: ICardAction) => {
+      if (!socketIO) return;
+
+      socketIO.emit(WebSocketEvent.SetWords, action);
+    },
+    [socketIO],
   );
 
   return (
@@ -157,6 +181,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
         createRoom,
         submitName,
         setWords,
+        sendAction,
       }}
     >
       {children}
