@@ -1,9 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { useRoomState, RoomState, PlayerRole } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
-import { CardState, Game, WordCard } from '../objects/Game';
-import { useGame } from './GameContext';
+import { CardState, useGame, WordCard } from './GameContext';
 
 // Events sent to websocket
 export enum WebSocketEvent {
@@ -11,6 +10,7 @@ export enum WebSocketEvent {
   EnterRoom = 'enter room',
   SubmitName = 'submit name',
   SetWords = 'set words',
+  SendAction = 'send action',
 }
 
 // Events received from websocket
@@ -22,16 +22,19 @@ enum WebSocketEmissionEvent {
   JoinRoom = 'joined room',
   CreateNewRoom = 'created new room',
   StartGame = 'started game',
+  ReceiveAction = 'received action',
 }
 
-enum ActionType {
-  FlipCard = 'flip card',
+export enum ActionType {
+  Flip = 'flip card',
+  Deactivate = 'deactivate card',
 }
 
 interface ICardAction {
   type: ActionType;
   position: number;
   player: string;
+  roomCode: string;
 }
 
 interface IWebSocketContext {
@@ -67,58 +70,69 @@ export const WebSocketProvider = ({ children }: IProp) => {
     playerRole,
     setPlayerRole,
   } = useRoomState();
-  const { setGame } = useGame();
+  const { setCardWords, setCardStates, updateCardStates } = useGame();
 
   const connectToWebSocket = useCallback(() => {
     return new Promise<SocketIOClient.Socket>((resolve, reject) => {
       if (!socketIO) {
         const webSocket: SocketIOClient.Socket = io.connect(`http://localhost:${process.env.REACT_APP_BACKEND_PORT}`);
-
-        webSocket.on(WebSocketEmissionEvent.GetNewMember, ({ allMembers }: { allMembers: string[] }) => {
-          setAllMembers && setAllMembers(allMembers);
-        });
-
-        webSocket.on(WebSocketEmissionEvent.ConfirmRoom, ({ roomCode }: { roomCode: string }) => {
-          setRoomCode && setRoomCode(roomCode);
-          setRoomState && setRoomState(RoomState.SetPlayerName);
-        });
-
-        webSocket.on(WebSocketEmissionEvent.RejectRoom, ({ roomCode }: { roomCode: string }) => {
-          alert(`${roomCode} does not exist.`);
-        });
-
-        webSocket.on(
-          WebSocketEmissionEvent.CreateNewRoom,
-          ({ roomCode, list }: { roomCode: string; list: List<number> }) => {
-            setRoomCode && setRoomCode(roomCode);
-            setRoomState && setRoomState(RoomState.SetPlayerName);
-          },
-        );
-
-        webSocket.on(WebSocketEmissionEvent.JoinRoom, ({ playerName }: { playerName: string }) => {
-          setPlayerName && setPlayerName(playerName);
-          setRoomState && setRoomState(RoomState.WaitForMembers);
-        });
-
         webSocket.on(WebSocketEmissionEvent.Connect, () => {
           console.log('User connected to web socket');
           setSocketIO(webSocket);
           resolve(webSocket);
         });
-
-        webSocket.on(
-          WebSocketEmissionEvent.StartGame,
-          ({ shuffledWords, cardStates }: { shuffledWords: List<WordCard>; cardStates: List<CardState> }) => {
-            const game = new Game(List(shuffledWords), List(cardStates));
-            setGame && setGame(game);
-            setRoomState && setRoomState(RoomState.PlayGame);
-          },
-        );
       } else {
         resolve(socketIO);
       }
     });
-  }, [socketIO, setAllMembers, setRoomState, setPlayerName, setRoomCode, setGame]);
+  }, [socketIO]);
+
+  useEffect(() => {
+    socketIO?.on(WebSocketEmissionEvent.GetNewMember, ({ allMembers }: { allMembers: string[] }) => {
+      setAllMembers && setAllMembers(allMembers);
+    });
+
+    socketIO?.on(WebSocketEmissionEvent.ConfirmRoom, ({ roomCode }: { roomCode: string }) => {
+      setRoomCode && setRoomCode(roomCode);
+      setRoomState && setRoomState(RoomState.SetPlayerName);
+    });
+
+    socketIO?.on(WebSocketEmissionEvent.RejectRoom, ({ roomCode }: { roomCode: string }) => {
+      alert(`${roomCode} does not exist.`);
+    });
+
+    socketIO?.on(WebSocketEmissionEvent.CreateNewRoom, ({ roomCode }: { roomCode: string }) => {
+      setRoomCode && setRoomCode(roomCode);
+      setRoomState && setRoomState(RoomState.SetPlayerName);
+    });
+
+    socketIO?.on(WebSocketEmissionEvent.JoinRoom, ({ playerName }: { playerName: string }) => {
+      setPlayerName && setPlayerName(playerName);
+      setRoomState && setRoomState(RoomState.WaitForMembers);
+    });
+
+    socketIO?.on(
+      WebSocketEmissionEvent.StartGame,
+      ({ shuffledWords, cardStates }: { shuffledWords: List<WordCard>; cardStates: List<CardState> }) => {
+        setCardWords(List(shuffledWords));
+        setCardStates(List(cardStates));
+        setRoomState && setRoomState(RoomState.PlayGame);
+      },
+    );
+
+    socketIO?.on(WebSocketEmissionEvent.ReceiveAction, (action: ICardAction) => {
+      updateCardStates(action.position, action.type);
+    });
+  }, [
+    socketIO,
+    setAllMembers,
+    setRoomState,
+    setPlayerName,
+    setRoomCode,
+    setCardWords,
+    setCardStates,
+    updateCardStates,
+  ]);
 
   const submitName = useCallback(
     (playerName: string) => {
@@ -168,7 +182,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
     (action: ICardAction) => {
       if (!socketIO) return;
 
-      socketIO.emit(WebSocketEvent.SetWords, action);
+      socketIO.emit(WebSocketEvent.SendAction, action);
     },
     [socketIO],
   );
