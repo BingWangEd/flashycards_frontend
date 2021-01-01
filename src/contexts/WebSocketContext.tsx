@@ -98,7 +98,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
     });
 
     socketIO?.on(WebSocketEmissionEvent.RejectRoom, ({ roomCode }: { roomCode: string }) => {
-      alert(`${roomCode} does not exist.`);
+      alert(`${roomCode} does not exist or game already started in the room`);
     });
 
     socketIO?.on(WebSocketEmissionEvent.CreateNewRoom, ({ roomCode }: { roomCode: string }) => {
