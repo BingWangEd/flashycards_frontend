@@ -1,25 +1,17 @@
-import React, { FunctionComponent, memo, useEffect } from 'react';
+import React, { FunctionComponent, memo, useCallback, useEffect } from 'react';
+import { ActionType, ICardAction } from '../../contexts/GameContext';
 import { useRoomState } from '../../contexts/RoomStateContext';
-import { ActionType, useWebSocketContext } from '../../contexts/WebSocketContext';
 
 interface IProps {
   word: string;
   position: number;
-  isActive: boolean;
+  locked: boolean;
   isOpen: boolean;
+  sendAction: (action: ICardAction) => void;
+  //setwaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const isDeepEqual = (prevProps: IProps, currProps: IProps) => {
-  const { word: prevWord, position: prevPosition, isActive: prevIsActive, isOpen: prevIsOpen } = prevProps;
-  const { word, position, isActive, isOpen } = currProps;
-
-  const result = prevWord === word && prevPosition === position && prevIsActive === isActive && prevIsOpen === isOpen;
-
-  return result;
-};
-
-const Card: FunctionComponent<IProps> = memo<IProps>(({ word, position, isActive, isOpen }: IProps) => {
-  const { sendAction } = useWebSocketContext();
+const Card: FunctionComponent<IProps> = memo<IProps>(({ word, position, locked, isOpen, sendAction }: IProps) => {
   const cardContent = isOpen ? word : '♤';
   const { playerName, roomCode } = useRoomState();
   const style = {
@@ -33,30 +25,28 @@ const Card: FunctionComponent<IProps> = memo<IProps>(({ word, position, isActive
     },
   };
 
-  console.log(`card ${word} rendered`);
-
   useEffect(() => {
     console.log(`card ${word} mounted`);
     return () => console.log(`card ${word} unmounted`);
   });
+
+  const handleClick = useCallback(() => {
+    if (locked || isOpen) return;
+    // setwaitingForResponse(true);
+    sendAction({
+      type: ActionType.Open,
+      position,
+      player: playerName || '',
+      roomCode: roomCode || '',
+    });
+  }, [locked, isOpen, playerName, position, roomCode, sendAction]);
+
   return (
-    <div
-      style={style.card}
-      onClick={() => {
-        if (isActive && !isOpen) {
-          sendAction({
-            type: ActionType.Flip,
-            position,
-            player: playerName || '',
-            roomCode: roomCode || '',
-          });
-        }
-      }}
-    >
+    <div style={style.card} onClick={handleClick}>
       <h2>{cardContent}</h2>
     </div>
   );
-}, isDeepEqual);
+});
 
 Card.displayName = 'Card';
 

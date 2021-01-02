@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode, use
 import { useRoomState, RoomState, PlayerRole } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
-import { CardState, useGame, WordCard } from './GameContext';
+import { AllActionType, CardState, ICardAction, useGame, WordCard } from './GameContext';
 
 // Events sent to websocket
 export enum WebSocketEvent {
@@ -23,18 +23,6 @@ enum WebSocketEmissionEvent {
   CreateNewRoom = 'created new room',
   StartGame = 'started game',
   ReceiveAction = 'received action',
-}
-
-export enum ActionType {
-  Flip = 'flip card',
-  Deactivate = 'deactivate card',
-}
-
-interface ICardAction {
-  type: ActionType;
-  position: number;
-  player: string;
-  roomCode: string;
 }
 
 interface IWebSocketContext {
@@ -70,7 +58,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
     playerRole,
     setPlayerRole,
   } = useRoomState();
-  const { setCardWords, setCardStates, updateCardStates } = useGame();
+  const { startGame, implementCardActions } = useGame();
 
   const connectToWebSocket = useCallback(() => {
     return new Promise<SocketIOClient.Socket>((resolve, reject) => {
@@ -113,26 +101,25 @@ export const WebSocketProvider = ({ children }: IProp) => {
 
     socketIO?.on(
       WebSocketEmissionEvent.StartGame,
-      ({ shuffledWords, cardStates }: { shuffledWords: List<WordCard>; cardStates: List<CardState> }) => {
-        setCardWords(List(shuffledWords));
-        setCardStates(List(cardStates));
+      ({
+        shuffledWords,
+        cardStates,
+        actions,
+      }: {
+        shuffledWords: List<WordCard>;
+        cardStates: List<CardState>;
+        actions: AllActionType[];
+      }) => {
+        startGame(List(shuffledWords), List(cardStates));
+        implementCardActions(actions);
         setRoomState && setRoomState(RoomState.PlayGame);
       },
     );
 
-    socketIO?.on(WebSocketEmissionEvent.ReceiveAction, (action: ICardAction) => {
-      updateCardStates(action.position, action.type);
+    socketIO?.on(WebSocketEmissionEvent.ReceiveAction, (actions: AllActionType[]) => {
+      implementCardActions(actions);
     });
-  }, [
-    socketIO,
-    setAllMembers,
-    setRoomState,
-    setPlayerName,
-    setRoomCode,
-    setCardWords,
-    setCardStates,
-    updateCardStates,
-  ]);
+  }, [socketIO, setAllMembers, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame]);
 
   const submitName = useCallback(
     (playerName: string) => {
