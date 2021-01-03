@@ -12,7 +12,6 @@ interface IProps {
 }
 
 const Card: FunctionComponent<IProps> = memo<IProps>(({ word, position, locked, isOpen, sendAction }: IProps) => {
-  const cardContent = isOpen ? word : '♤';
   const { playerName, roomCode } = useRoomState();
   const style = {
     card: {
@@ -20,8 +19,37 @@ const Card: FunctionComponent<IProps> = memo<IProps>(({ word, position, locked, 
       height: '150px',
       borderRadius: '15px',
       margin: '15px',
-      border: '2px solid #ccc',
       alignSelf: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+    },
+    flipContainer: {
+      perspective: '1000px',
+    },
+    cardContent: {
+      transform: 'rotateY(0deg)',
+      transition: '0.6s',
+      zIndex: 2,
+      transformStyle: 'preserve-3d' as const,
+      position: 'relative' as const,
+      border: '2px solid #ccc',
+    },
+    cardCover: {
+      transform: 'rotateY(180deg)',
+      transition: '0.6s',
+      transformStyle: 'preserve-3d' as const,
+      position: 'relative' as const,
+      border: '2px solid #ccc',
+    },
+    hideBack: {
+      backfaceVisibility: 'hidden' as const,
+      position: 'absolute' as const,
+      top: '0',
+      left: '0',
+    },
+    text: {
+      alignSelf: 'center',
+      textAlign: 'center' as const,
     },
   };
 
@@ -41,11 +69,22 @@ const Card: FunctionComponent<IProps> = memo<IProps>(({ word, position, locked, 
     });
   }, [locked, isOpen, playerName, position, roomCode, sendAction]);
 
+  // return (
+  //   <div style={style.card} onClick={handleClick}>
+  //     <h2 style={style.text}>{cardContent}</h2>
+  //   </div>
+  // );
+
   return (
-    <div style={style.card} onClick={handleClick}>
-      <h2>{cardContent}</h2>
-    </div>
-  );
+    <div style={{...style.flipContainer, ...style.card}}>
+        <div style={{ ...style.card, ...style.cardContent, ...style.hideBack, transform: isOpen ? 'rotateY(0deg)' : 'rotateY(180deg)'}}>
+          <h2 style={style.text}>{word}</h2>
+        </div>
+        <div style={{ ...style.card, ...style.cardCover, ...style.hideBack, transform: isOpen ? 'rotateY(-180deg)' : 'rotateY(0deg)'}} onClick={handleClick}>
+          <h2 style={style.text}>♤</h2>
+        </div>
+      </div>
+  )
 });
 
 Card.displayName = 'Card';
