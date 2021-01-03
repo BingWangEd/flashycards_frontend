@@ -1,7 +1,8 @@
 import { List, Map } from 'immutable';
 import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
+import { useRoomState } from './RoomStateContext';
 
-enum CardSide {
+export enum CardSide {
   Word = 'word',
   Translation = 'translation',
 }
@@ -80,9 +81,10 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
   const [cardWords, setCardWords] = useState<List<WordCard>>();
   const [cardStates, setCardStates] = useState<List<CardState> | undefined>();
   const [currentPlayer, setCurrentPlayer] = useState<string | undefined>();
-  const [scores, setScores] = useState<Map<string, number> | undefined>();
+  const [scores, setScores] = useState<Map<string, number>>(Map());
   // Deactivate any interaction until received response to action
   const [waitingForResponse, setWaitingForResponse] = useState(false);
+  const {allMembers} = useRoomState();
 
   const act = useCallback(
     <T extends ActionType>(action: IResponseAction<T>) => {
@@ -157,9 +159,12 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
   const startGame = useCallback(
     (shuffledWords: List<WordCard>, cardStates: List<CardState>) => {
       setCardWords(List(shuffledWords));
+      let score = Map<string, number>();
+      allMembers?.map(member => score=score.set(member, 0));
+      setScores(score);
       setCardStates(List(cardStates));
     },
-    [setCardWords, setCardStates],
+    [setCardWords, setCardStates, allMembers],
   );
 
   return (
