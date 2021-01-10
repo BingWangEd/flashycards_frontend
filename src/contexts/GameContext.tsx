@@ -34,22 +34,26 @@ export type AllActionType =
   | IResponseAction<ActionType.Close>
   | IResponseAction<ActionType.Deactivate>
   | IResponseAction<ActionType.ChangeTurns>
-  | IResponseAction<ActionType.ChangeScore>;
+  | IResponseAction<ActionType.SetScores>
+  | IResponseAction<ActionType.SetMembers>;
 
-type IResponseAction<T extends ActionType> = {
-  type: T;
-  payload: T extends ActionType.ChangeTurns ? IMember : T extends ActionType.ChangeScore ? number : number[];
-  player: string;
-  timeout?: number;
-};
+  export type IResponseAction<T extends ActionType> = {
+    type: T;
+    payload: T extends ActionType.ChangeTurns ? IMember :
+      T extends ActionType.SetScores ? Map<string, number> : 
+      T extends ActionType.SetMembers ? List<string> : number[];
+    player?: string;
+    timeout?: number;
+  }
 
-export enum ActionType {
-  Open = 'open card',
-  Close = 'close card',
-  Deactivate = 'deactivate card',
-  ChangeTurns = 'change turns',
-  ChangeScore = 'change score',
-}
+  export enum ActionType {
+    Open = 'open card',
+    Close = 'close card',
+    Deactivate = 'deactivate card',
+    ChangeTurns = 'change turns',
+    SetScores = 'set scores',
+    SetMembers = 'set members',
+  }
 
 interface IMember {
   name: string;
@@ -60,7 +64,7 @@ interface IMember {
 export interface ICardAction {
   type: ActionType;
   position: number;
-  player: string;
+  player?: string;
   roomCode: string;
 }
 
@@ -84,7 +88,7 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
   const [scores, setScores] = useState<Map<string, number>>(Map());
   // Deactivate any interaction until received response to action
   const [waitingForResponse, setWaitingForResponse] = useState(false);
-  const {allMembers} = useRoomState();
+  const {allMembers, setAllMembers} = useRoomState();
 
   const act = useCallback(
     <T extends ActionType>(action: IResponseAction<T>) => {
@@ -131,9 +135,13 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
           const { payload: changeTurnsPayload } = action as IResponseAction<ActionType.ChangeTurns>;
           setCurrentPlayer(changeTurnsPayload.name);
           break;
-        case ActionType.ChangeScore:
-          const { player, payload: changeScorePayload } = action as IResponseAction<ActionType.ChangeScore>;
-          setScores(scores?.set(player, changeScorePayload));
+        case ActionType.SetScores:
+          const { payload: scores } = action as IResponseAction<ActionType.SetScores>;
+          setScores(Map(scores));
+          break;
+        case ActionType.SetMembers:
+          const { payload } = action as IResponseAction<ActionType.SetMembers>;
+          setAllMembers && setAllMembers(List(payload));
           break;
         default:
           throw Error(`Action ${action} is not recognizable`);
@@ -159,12 +167,9 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
   const startGame = useCallback(
     (shuffledWords: List<WordCard>, cardStates: List<CardState>) => {
       setCardWords(List(shuffledWords));
-      let score = Map<string, number>();
-      allMembers?.map(member => score=score.set(member, 0));
-      setScores(score);
       setCardStates(List(cardStates));
     },
-    [setCardWords, setCardStates, allMembers],
+    [setCardWords, setCardStates],
   );
 
   return (

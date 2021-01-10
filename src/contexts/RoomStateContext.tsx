@@ -1,3 +1,4 @@
+import { List } from 'immutable';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export enum RoomState {
@@ -19,8 +20,8 @@ interface IRoomStateContext {
   setRoomCode: React.Dispatch<React.SetStateAction<string>> | undefined;
   playerName: string | undefined;
   setPlayerName: React.Dispatch<React.SetStateAction<string>> | undefined;
-  allMembers: string[] | undefined;
-  setAllMembers: React.Dispatch<React.SetStateAction<string[]>> | undefined;
+  allMembers: List<string> | undefined;
+  setAllMembers: React.Dispatch<React.SetStateAction<List<string>>> | undefined;
   playerRole: string | undefined;
   setPlayerRole: React.Dispatch<React.SetStateAction<string | undefined>> | undefined;
 }
@@ -44,7 +45,7 @@ export const RoomStateContextProvider = ({ children }: { children: ReactNode }) 
   const [roomState, setRoomState] = useState<RoomState>(RoomState.GetGameRoom);
   const [roomCode, setRoomCode] = useState<string>('');
   const [playerName, setPlayerName] = useState<string>('');
-  const [allMembers, setAllMembers] = useState<string[]>([]);
+  const [allMembers, setAllMembers] = useState<List<string>>(List());
   const [playerRole, setPlayerRole] = useState<string | undefined>(undefined);
 
   return (

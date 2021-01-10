@@ -23,6 +23,7 @@ enum WebSocketEmissionEvent {
   CreateNewRoom = 'created new room',
   StartGame = 'started game',
   ReceiveAction = 'received action',
+  LeftRoom = 'member left room',
 }
 
 interface IWebSocketContext {
@@ -52,7 +53,6 @@ export const WebSocketProvider = ({ children }: IProp) => {
   const {
     setRoomState,
     setPlayerName,
-    setAllMembers,
     setRoomCode,
     roomCode,
     playerRole,
@@ -76,8 +76,8 @@ export const WebSocketProvider = ({ children }: IProp) => {
   }, [socketIO]);
 
   useEffect(() => {
-    socketIO?.on(WebSocketEmissionEvent.GetNewMember, ({ allMembers }: { allMembers: string[] }) => {
-      setAllMembers && setAllMembers(allMembers);
+    socketIO?.on(WebSocketEmissionEvent.GetNewMember, ({ actions }: { actions: AllActionType[] }) => {
+      implementCardActions(actions);
     });
 
     socketIO?.on(WebSocketEmissionEvent.ConfirmRoom, ({ roomCode }: { roomCode: string }) => {
@@ -119,7 +119,19 @@ export const WebSocketProvider = ({ children }: IProp) => {
     socketIO?.on(WebSocketEmissionEvent.ReceiveAction, (actions: AllActionType[]) => {
       implementCardActions(actions);
     });
-  }, [socketIO, setAllMembers, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame]);
+
+    socketIO?.on(WebSocketEmissionEvent.LeftRoom, ({
+      name, actions
+    }: {
+      name: string,
+      actions: AllActionType[],
+    }) => {
+      // TODO: set a better data structure for removing member
+      // or define an action on backend to do it
+      // setAllMembers(allMembers.delete(name));
+      implementCardActions(actions);
+    });
+  }, [socketIO, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame]);
 
   const submitName = useCallback(
     (playerName: string) => {
