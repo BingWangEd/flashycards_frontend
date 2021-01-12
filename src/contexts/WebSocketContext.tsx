@@ -131,6 +131,16 @@ export const WebSocketProvider = ({ children }: IProp) => {
       // setAllMembers(allMembers.delete(name));
       implementCardActions(actions);
     });
+
+    return () => {
+      socketIO?.off(WebSocketEmissionEvent.GetNewMember);
+      socketIO?.off(WebSocketEmissionEvent.ConfirmRoom);
+      socketIO?.off(WebSocketEmissionEvent.RejectRoom);
+      socketIO?.off(WebSocketEmissionEvent.CreateNewRoom);
+      socketIO?.off(WebSocketEmissionEvent.StartGame);
+      socketIO?.off(WebSocketEmissionEvent.ReceiveAction);
+      socketIO?.off(WebSocketEmissionEvent.LeftRoom);
+    }
   }, [socketIO, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame]);
 
   const submitName = useCallback(
