@@ -23,7 +23,7 @@ const LayCards: FunctionComponent = () => {
     <div style={style.cardContainer}>
       {cardWords?.map((word, index) => {
         const isActive = cardStates?.get(index)?.isActive || false;
-        const locked = false;
+        const isLocked = false;
         // const locked = !isActive || waitingForResponse || playerName !== currentPlayer;
 
         return (
@@ -31,7 +31,8 @@ const LayCards: FunctionComponent = () => {
             key={index}
             word={(word && word.word) || ''}
             isOpen={cardStates?.get(index)?.isOpen || false}
-            locked={locked}
+            isActive={isActive}
+            isLocked={isLocked}
             position={index}
             sendAction={sendAction}
             // setwaitingForResponse={setWaitingForResponse}
