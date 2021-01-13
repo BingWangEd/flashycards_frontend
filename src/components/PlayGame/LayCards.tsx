@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useMemo } from 'react';
 import { useGame } from '../../contexts/GameContext';
 import { useRoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
@@ -6,7 +6,7 @@ import Card from './Card';
 
 const LayCards: FunctionComponent = () => {
   const { playerName } = useRoomState();
-  const { cardStates, cardWords, currentPlayer, waitingForResponse } = useGame();
+  const { cardStates, cardWords, currentPlayer, waitingForResponse, setWaitingForResponse } = useGame();
   const { sendAction } = useWebSocketContext();
 
   const style = {
@@ -19,12 +19,21 @@ const LayCards: FunctionComponent = () => {
     },
   };
 
+  const isLocked = useMemo(() => waitingForResponse || playerName !== currentPlayer, [
+    waitingForResponse,
+    playerName,
+    currentPlayer,
+  ]);
+
   return (
-    <div style={style.cardContainer}>
+    <div
+      style={{
+        ...style.cardContainer,
+        pointerEvents: isLocked ? 'none' : 'auto',
+      }}
+    >
       {cardWords?.map((word, index) => {
         const isActive = cardStates?.get(index)?.isActive || false;
-        const isLocked = false;
-        // const locked = !isActive || waitingForResponse || playerName !== currentPlayer;
 
         return (
           <Card
@@ -32,10 +41,9 @@ const LayCards: FunctionComponent = () => {
             word={(word && word.word) || ''}
             isOpen={cardStates?.get(index)?.isOpen || false}
             isActive={isActive}
-            isLocked={isLocked}
             position={index}
             sendAction={sendAction}
-            // setwaitingForResponse={setWaitingForResponse}
+            setwaitingForResponse={setWaitingForResponse}
           />
         );
       })}

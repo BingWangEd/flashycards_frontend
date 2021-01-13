@@ -37,23 +37,27 @@ export type AllActionType =
   | IResponseAction<ActionType.SetScores>
   | IResponseAction<ActionType.SetMembers>;
 
-  export type IResponseAction<T extends ActionType> = {
-    type: T;
-    payload: T extends ActionType.ChangeTurns ? IMember :
-      T extends ActionType.SetScores ? Map<string, number> : 
-      T extends ActionType.SetMembers ? List<string> : number[];
-    player?: string;
-    timeout?: number;
-  }
+export type IResponseAction<T extends ActionType> = {
+  type: T;
+  payload: T extends ActionType.ChangeTurns
+    ? IMember
+    : T extends ActionType.SetScores
+    ? Map<string, number>
+    : T extends ActionType.SetMembers
+    ? List<string>
+    : number[];
+  player?: string;
+  timeout?: number;
+};
 
-  export enum ActionType {
-    Open = 'open card',
-    Close = 'close card',
-    Deactivate = 'deactivate card',
-    ChangeTurns = 'change turns',
-    SetScores = 'set scores',
-    SetMembers = 'set members',
-  }
+export enum ActionType {
+  Open = 'open card',
+  Close = 'close card',
+  Deactivate = 'deactivate card',
+  ChangeTurns = 'change turns',
+  SetScores = 'set scores',
+  SetMembers = 'set members',
+}
 
 interface IMember {
   name: string;
@@ -88,12 +92,10 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
   const [scores, setScores] = useState<Map<string, number>>(Map());
   // Deactivate any interaction until received response to action
   const [waitingForResponse, setWaitingForResponse] = useState(false);
-  const {allMembers, setAllMembers} = useRoomState();
+  const { setAllMembers } = useRoomState();
 
   const act = useCallback(
     <T extends ActionType>(action: IResponseAction<T>) => {
-      // setWaitingForResponse(false);
-
       let newCardStates = cardStates || List();
       switch (action.type) {
         case ActionType.Open:
@@ -147,21 +149,51 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
           throw Error(`Action ${action} is not recognizable`);
       }
     },
-    [cardStates, scores],
+    [cardStates, setAllMembers],
   );
 
-  const implementCardActions = useCallback(
-    (actions: AllActionType[]): void => {
-      actions.forEach(action => {
-        const { timeout } = action;
-        if (timeout) {
-          setTimeout(() => act(action), timeout);
-        } else {
+  const timeoutFunc = useCallback(
+    (action: AllActionType, ms: number) => {
+      return new Promise(resolve => {
+        setTimeout(() => {
           act(action);
-        }
+          resolve('OK');
+        }, ms);
       });
     },
     [act],
+  );
+
+  const asyncAct = useCallback(
+    (action: AllActionType) => {
+      return new Promise(async resolve => {
+        const { timeout } = action;
+        if (timeout) {
+          await timeoutFunc(action, timeout);
+        } else {
+          act(action);
+        }
+        resolve('OK');
+      });
+    },
+    [act, timeoutFunc],
+  );
+
+  const asyncActions = useCallback(async (actions: AllActionType[]) => {
+    return Promise.all(
+      actions.map(async action => {
+        await asyncAct(action);
+      }),
+    );
+  }, [asyncAct]);
+
+  const implementCardActions = useCallback(
+    async (actions: AllActionType[]) => {
+      await asyncActions(actions);
+
+      setWaitingForResponse(false);
+    },
+    [act, asyncActions],
   );
 
   const startGame = useCallback(

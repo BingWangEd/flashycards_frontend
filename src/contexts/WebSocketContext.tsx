@@ -50,14 +50,7 @@ interface IProp {
 }
 export const WebSocketProvider = ({ children }: IProp) => {
   const [socketIO, setSocketIO] = useState<SocketIOClient.Socket | undefined>();
-  const {
-    setRoomState,
-    setPlayerName,
-    setRoomCode,
-    roomCode,
-    playerRole,
-    setPlayerRole,
-  } = useRoomState();
+  const { setRoomState, setPlayerName, setRoomCode, roomCode, playerRole, setPlayerRole } = useRoomState();
   const { startGame, implementCardActions } = useGame();
 
   const connectToWebSocket = useCallback(() => {
@@ -120,12 +113,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
       implementCardActions(actions);
     });
 
-    socketIO?.on(WebSocketEmissionEvent.LeftRoom, ({
-      name, actions
-    }: {
-      name: string,
-      actions: AllActionType[],
-    }) => {
+    socketIO?.on(WebSocketEmissionEvent.LeftRoom, ({ name, actions }: { name: string; actions: AllActionType[] }) => {
       // TODO: set a better data structure for removing member
       // or define an action on backend to do it
       // setAllMembers(allMembers.delete(name));
@@ -140,7 +128,7 @@ export const WebSocketProvider = ({ children }: IProp) => {
       socketIO?.off(WebSocketEmissionEvent.StartGame);
       socketIO?.off(WebSocketEmissionEvent.ReceiveAction);
       socketIO?.off(WebSocketEmissionEvent.LeftRoom);
-    }
+    };
   }, [socketIO, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame]);
 
   const submitName = useCallback(
