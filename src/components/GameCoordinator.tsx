@@ -4,6 +4,7 @@ import GetGameRoom from './GetGameRoom';
 import EnterPlayerName from './EnterPlayerName';
 import WaitForMembers from './WaitForMembers';
 import PlayGame from './PlayGame';
+import GameOver from './GameOver';
 
 const GameCoordinator: FunctionComponent = () => {
   const { roomState } = useRoomState();
@@ -17,6 +18,8 @@ const GameCoordinator: FunctionComponent = () => {
       return <WaitForMembers />;
     case RoomState.PlayGame:
       return <PlayGame />;
+    case RoomState.EndGame:
+      return <GameOver />;
     default:
       return <div>something is wrong</div>;
   }

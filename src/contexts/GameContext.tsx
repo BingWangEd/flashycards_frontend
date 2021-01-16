@@ -1,6 +1,6 @@
 import { List, Map } from 'immutable';
 import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
-import { useRoomState } from './RoomStateContext';
+import { RoomState, useRoomState } from './RoomStateContext';
 
 export enum CardSide {
   Word = 'word',
@@ -25,6 +25,7 @@ interface IGameContext {
   implementCardActions: (actions: AllActionType[]) => void;
   currentPlayer: string | undefined;
   scores: Map<string, number> | undefined;
+  winners: string[] | undefined;
   waitingForResponse: boolean;
   setWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -41,6 +42,8 @@ export type IResponseAction<T extends ActionType> = {
   type: T;
   payload: T extends ActionType.ChangeTurns
     ? IMember
+    : T extends ActionType.EndGame
+    ? string[]
     : T extends ActionType.SetScores
     ? Map<string, number>
     : T extends ActionType.SetMembers
@@ -57,6 +60,7 @@ export enum ActionType {
   ChangeTurns = 'change turns',
   SetScores = 'set scores',
   SetMembers = 'set members',
+  EndGame = 'end game',
 }
 
 interface IMember {
@@ -79,6 +83,7 @@ export const GameContext = createContext<IGameContext>({
   implementCardActions: () => console.log('Calling dummy implementCardActions'),
   currentPlayer: undefined,
   scores: undefined,
+  winners: undefined,
   waitingForResponse: false,
   setWaitingForResponse: () => console.log('Calling dummy setWaitingForResponse'),
 });
@@ -92,7 +97,8 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
   const [scores, setScores] = useState<Map<string, number>>(Map());
   // Deactivate any interaction until received response to action
   const [waitingForResponse, setWaitingForResponse] = useState(false);
-  const { setAllMembers } = useRoomState();
+  const { setAllMembers, setRoomState } = useRoomState();
+  const [winners, setWinners] = useState<string[] | undefined>();
 
   const act = useCallback(
     <T extends ActionType>(action: IResponseAction<T>) => {
@@ -142,14 +148,19 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
           setScores(Map(scores));
           break;
         case ActionType.SetMembers:
-          const { payload } = action as IResponseAction<ActionType.SetMembers>;
-          setAllMembers && setAllMembers(List(payload));
+          const { payload: membersPayload } = action as IResponseAction<ActionType.SetMembers>;
+          setAllMembers && setAllMembers(List(membersPayload));
+          break;
+        case ActionType.EndGame:
+          const { payload: winnersPayload } = action as IResponseAction<ActionType.EndGame>;
+          setWinners(winnersPayload);
+          setRoomState && setRoomState(RoomState.EndGame);
           break;
         default:
           throw Error(`Action ${action} is not recognizable`);
       }
     },
-    [cardStates, setAllMembers],
+    [cardStates, setAllMembers, setRoomState],
   );
 
   const timeoutFunc = useCallback(
@@ -179,13 +190,16 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
     [act, timeoutFunc],
   );
 
-  const asyncActions = useCallback(async (actions: AllActionType[]) => {
-    return Promise.all(
-      actions.map(async action => {
-        await asyncAct(action);
-      }),
-    );
-  }, [asyncAct]);
+  const asyncActions = useCallback(
+    async (actions: AllActionType[]) => {
+      return Promise.all(
+        actions.map(async action => {
+          await asyncAct(action);
+        }),
+      );
+    },
+    [asyncAct],
+  );
 
   const implementCardActions = useCallback(
     async (actions: AllActionType[]) => {
@@ -193,7 +207,7 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
 
       setWaitingForResponse(false);
     },
-    [act, asyncActions],
+    [asyncActions],
   );
 
   const startGame = useCallback(
@@ -213,6 +227,7 @@ export const GameContextProvider = ({ children }: { children: ReactNode }) => {
         startGame,
         currentPlayer,
         scores,
+        winners,
         waitingForResponse,
         setWaitingForResponse,
       }}
