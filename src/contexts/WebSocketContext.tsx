@@ -116,7 +116,6 @@ export const WebSocketProvider = ({ children }: IProp) => {
     socketIO?.on(WebSocketEmissionEvent.LeftRoom, ({ name, actions }: { name: string; actions: AllActionType[] }) => {
       // TODO: set a better data structure for removing member
       // or define an action on backend to do it
-      // setAllMembers(allMembers.delete(name));
       implementCardActions(actions);
     });
 

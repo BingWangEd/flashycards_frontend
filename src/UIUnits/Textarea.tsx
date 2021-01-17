@@ -23,16 +23,17 @@ const Textarea: FunctionComponent<IProps> = ({ label, onSubmit, onChange, varian
           height: '500px',
         }
       : {
-          width: '300px',
+          width: '100%',
           height: '200px',
         };
   const style = {
     inputEffect: {
       border: 0,
-      padding: '7px',
       borderTop: '1px solid #ccc',
       borderLeft: '1px solid #ccc',
       overflow: 'scroll',
+      padding: '7px',
+      boxSizing: 'border-box' as const,
       ...styleByVariant,
     },
   };

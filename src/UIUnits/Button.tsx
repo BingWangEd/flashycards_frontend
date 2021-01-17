@@ -10,7 +10,7 @@ const Button: FunctionComponent<IProps> = ({ label, onClick, ...props }: IProps)
   const style = {
     button: {
       height: '4em',
-      width: '20%',
+      width: '100%',
       padding: '1.5em auto',
       margin: '1em auto',
       backgroundColor: 'white',

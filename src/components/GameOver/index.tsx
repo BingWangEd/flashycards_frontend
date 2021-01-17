@@ -1,13 +1,12 @@
-import React, { FunctionComponent, useCallback } from 'react';
-import { isExpressionWithTypeArguments } from 'typescript';
-import { useGame } from '../../contexts/GameContext';
-import { useRoomState } from '../../contexts/RoomStateContext';
+import React, { FunctionComponent } from 'react';
 import confetti from '../../assets/icons8-confetti-100.png';
 import futurama_fry from '../../assets/icons8-futurama-fry-100.png';
+import { useGame } from '../../contexts/GameContext';
+import { useRoomState } from '../../contexts/RoomStateContext';
 
 const GameOver: FunctionComponent = () => {
-  const winners = ['b'];
-  const playerName = 'a';
+  const { winners } = useGame();
+  const { playerName } = useRoomState();
   const isWinner = winners?.find(winner => winner === playerName);
   const otherWinners = winners?.filter(winner => winner !== playerName) || [];
   const lastWinner = otherWinners.pop();
@@ -25,7 +24,7 @@ const GameOver: FunctionComponent = () => {
     container: {
       height: '250px',
     },
-  }
+  };
 
   return (
     <div style={style.container}>
