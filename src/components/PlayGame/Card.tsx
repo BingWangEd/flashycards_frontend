@@ -50,6 +50,7 @@ const Card: FunctionComponent<IProps> = memo<IProps>(
         transformStyle: 'preserve-3d' as const,
         position: 'relative' as const,
         border: '2px solid #ccc',
+        background: 'white',
       },
       cardCover: {
         transform: 'rotateY(180deg)',
@@ -57,6 +58,7 @@ const Card: FunctionComponent<IProps> = memo<IProps>(
         transformStyle: 'preserve-3d' as const,
         position: 'relative' as const,
         border: '2px solid #ccc',
+        background: 'white',
       },
       hideBack: {
         backfaceVisibility: 'hidden' as const,
@@ -73,16 +75,11 @@ const Card: FunctionComponent<IProps> = memo<IProps>(
         fontSize: '2em',
         bottom: '-10px',
         left: '67px',
-        zIndex: 2,
+        zIndex: 20,
         width: '50px',
         opacity: 0,
       },
     };
-
-    useEffect(() => {
-      console.log(`card ${word} mounted`);
-      return () => console.log(`card ${word} unmounted`);
-    });
 
     const handleClick = useCallback(() => {
       if (isOpen) return;
@@ -113,7 +110,7 @@ const Card: FunctionComponent<IProps> = memo<IProps>(
     );
 
     return (
-      <div style={{ ...style.flipContainer, ...style.card }}>
+      <div style={{ ...style.flipContainer, ...style.card }} onClick={handleClick}>
         {animation}
         <div
           style={{
@@ -132,7 +129,6 @@ const Card: FunctionComponent<IProps> = memo<IProps>(
             ...style.hideBack,
             transform: isOpen ? 'rotateY(-180deg)' : 'rotateY(0deg)',
           }}
-          onClick={handleClick}
         >
           <h2 style={style.text}>♤</h2>
         </div>
