@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useCallback } from 'react';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import InputBox from '../../uiUnits/InputBox';
 import Button from '../../uiUnits/Button';
+import InputBox from '../../uiUnits/InputBox';
 
 const GetGameRoom: FunctionComponent = () => {
   const { enterRoom, createRoom } = useWebSocketContext();

@@ -56,7 +56,11 @@ export const WebSocketProvider = ({ children }: IProp) => {
   const connectToWebSocket = useCallback(() => {
     return new Promise<SocketIOClient.Socket>((resolve, reject) => {
       if (!socketIO) {
-        const webSocket: SocketIOClient.Socket = io.connect(`http://localhost:${process.env.REACT_APP_BACKEND_PORT}`);
+        const url =
+          process.env.NODE_ENV === 'production'
+            ? `${process.env.HEROKU_APP_BACKEND}`
+            : `http://localhost:${process.env.REACT_APP_BACKEND_PORT}`;
+        const webSocket: SocketIOClient.Socket = io.connect(url);
         webSocket.on(WebSocketEmissionEvent.Connect, () => {
           console.log('User connected to web socket');
           setSocketIO(webSocket);
