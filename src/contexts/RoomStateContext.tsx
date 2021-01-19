@@ -1,5 +1,5 @@
 import { List } from 'immutable';
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, FunctionComponent } from 'react';
 
 export enum RoomState {
   GetGameRoom,
@@ -42,7 +42,11 @@ export const RoomStateContext = createContext<IRoomStateContext>({
 
 export const useRoomState: () => IRoomStateContext = () => useContext(RoomStateContext);
 
-export const RoomStateContextProvider = ({ children }: { children: ReactNode }) => {
+export const RoomStateContextProvider: FunctionComponent<{ children: ReactNode }> = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const [roomState, setRoomState] = useState<RoomState>(RoomState.GetGameRoom);
   const [roomCode, setRoomCode] = useState<string>('');
   const [playerName, setPlayerName] = useState<string>('');

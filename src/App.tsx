@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { RoomStateContextProvider } from './contexts/RoomStateContext';
 import { GameContextProvider } from './contexts/GameContext';
 import GameCoordinator from './components/GameCoordinator';
 import './App.css';
 
-function App() {
+const App: FunctionComponent = () => {
   return (
     <RoomStateContextProvider>
       <GameContextProvider>
@@ -17,6 +17,6 @@ function App() {
       </GameContextProvider>
     </RoomStateContextProvider>
   );
-}
+};
 
 export default App;

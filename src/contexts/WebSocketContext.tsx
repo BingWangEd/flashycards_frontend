@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+  useEffect,
+  FunctionComponent,
+} from 'react';
 import { useRoomState, RoomState, PlayerRole } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
@@ -48,7 +56,7 @@ export const useWebSocketContext: () => IWebSocketContext = () => useContext(Web
 interface IProp {
   children: ReactNode;
 }
-export const WebSocketProvider = ({ children }: IProp) => {
+export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ children }: IProp) => {
   const [socketIO, setSocketIO] = useState<SocketIOClient.Socket | undefined>();
   const { setRoomState, setPlayerName, setRoomCode, roomCode, playerRole, setPlayerRole } = useRoomState();
   const { startGame, implementCardActions } = useGame();
@@ -58,8 +66,10 @@ export const WebSocketProvider = ({ children }: IProp) => {
       if (!socketIO) {
         const url =
           process.env.NODE_ENV === 'production'
-            ? `${process.env.HEROKU_APP_BACKEND}`
+            ? 'https://fathomless-oasis-35021.herokuapp.com/'
             : `http://localhost:${process.env.REACT_APP_BACKEND_PORT}`;
+        console.log('process.env.NODE_ENV: ', process.env.NODE_ENV);
+        console.log('process.env.HEROKU_APP_BACKEND: ', process.env.HEROKU_APP_BACKEND);
         const webSocket: SocketIOClient.Socket = io.connect(url);
         webSocket.on(WebSocketEmissionEvent.Connect, () => {
           console.log('User connected to web socket');

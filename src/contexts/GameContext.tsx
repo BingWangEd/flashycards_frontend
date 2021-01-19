@@ -1,5 +1,5 @@
 import { List, Map } from 'immutable';
-import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback, FunctionComponent } from 'react';
 import { RoomState, useRoomState } from './RoomStateContext';
 
 export enum CardSide {
@@ -90,7 +90,11 @@ export const GameContext = createContext<IGameContext>({
 
 export const useGame: () => IGameContext = () => useContext(GameContext);
 
-export const GameContextProvider = ({ children }: { children: ReactNode }) => {
+export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const [cardWords, setCardWords] = useState<List<WordCard>>();
   const [cardStates, setCardStates] = useState<List<CardState> | undefined>();
   const [currentPlayer, setCurrentPlayer] = useState<string | undefined>();

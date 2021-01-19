@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useState } from 'react';
+import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
 import { useRoomState, PlayerRole } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import Button from '../../uiUnits/Button';
@@ -29,23 +29,26 @@ const WaitForMembers: FunctionComponent = () => {
       textAlign: 'left' as const,
     },
   };
-  const rules: [string, RegExp][] = [
-    [
-      'Have at least 8 lines. Each line is a word and its translation',
-      // There needs to be at least 8 lines
-      /^((.*\n){7,})(.*)$/g,
+  const rules: [string, RegExp][] = useMemo(
+    () => [
+      [
+        'Have at least 8 lines. Each line is a word and its translation',
+        // There needs to be at least 8 lines
+        /^((.*\n){7,})(.*)$/g,
+      ],
+      [
+        'The word and its translation are separated by one #️⃣',
+        // Each line needs to have one and only one '#'
+        /^((([^#\n]{1,})#([^#\n]{1,})\n)*)(([^#\n]{1,})#([^#\n]{1,}))$/g,
+      ],
+      [
+        'Put the word itself first and then its translation. Eg. bonjour#hello',
+        // There needs to be something before and after the '#'
+        /^((([^#\n]{1,})#([^#\n]{1,})\n)*)(([^#\n]{1,})#([^#\n]{1,}))$/g,
+      ],
     ],
-    [
-      'The word and its translation are separated by one #️⃣',
-      // Each line needs to have one and only one '#'
-      /^((([^#\n]{1,})#([^#\n]{1,})\n)*)(([^#\n]{1,})#([^#\n]{1,}))$/g,
-    ],
-    [
-      'Put the word itself first and then its translation. Eg. bonjour#hello',
-      // There needs to be something before and after the '#'
-      /^((([^#\n]{1,})#([^#\n]{1,})\n)*)(([^#\n]{1,})#([^#\n]{1,}))$/g,
-    ],
-  ];
+    [],
+  );
 
   const handleSubmitWordsStartGame = useCallback(() => {
     const regexPattern = /^(([^#\n]*#[^#\n]*)\n){7,}([^#\n]*#[^#\n]*)$/g;
