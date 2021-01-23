@@ -10,7 +10,7 @@ import React, {
 import { useRoomState, RoomState, PlayerRole } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
-import { AllActionType, CardState, ICardAction, useGame, WordCard } from './GameContext';
+import { AllServerActionType, CardState, ICardAction, useGame, WordCard } from './GameContext';
 
 // Events sent to websocket
 export enum WebSocketEvent {
@@ -30,7 +30,7 @@ enum WebSocketEmissionEvent {
   JoinRoom = 'joined room',
   CreateNewRoom = 'created new room',
   StartGame = 'started game',
-  ReceiveAction = 'received action',
+  UpdateGameState = 'update gaem state',
   LeftRoom = 'member left room',
 }
 
@@ -68,8 +68,6 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
           process.env.NODE_ENV === 'production'
             ? 'https://fathomless-oasis-35021.herokuapp.com/'
             : `http://localhost:${process.env.REACT_APP_BACKEND_PORT}`;
-        console.log('process.env.NODE_ENV: ', process.env.NODE_ENV);
-        console.log('process.env.HEROKU_APP_BACKEND: ', process.env.HEROKU_APP_BACKEND);
         const webSocket: SocketIOClient.Socket = io.connect(url);
         webSocket.on(WebSocketEmissionEvent.Connect, () => {
           console.log('User connected to web socket');
@@ -83,7 +81,7 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
   }, [socketIO]);
 
   useEffect(() => {
-    socketIO?.on(WebSocketEmissionEvent.GetNewMember, ({ actions }: { actions: AllActionType[] }) => {
+    socketIO?.on(WebSocketEmissionEvent.GetNewMember, ({ actions }: { actions: AllServerActionType[] }) => {
       implementCardActions(actions);
     });
 
@@ -115,7 +113,7 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
       }: {
         shuffledWords: List<WordCard>;
         cardStates: List<CardState>;
-        actions: AllActionType[];
+        actions: AllServerActionType[];
       }) => {
         startGame(List(shuffledWords), List(cardStates));
         implementCardActions(actions);
@@ -123,15 +121,18 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
       },
     );
 
-    socketIO?.on(WebSocketEmissionEvent.ReceiveAction, (actions: AllActionType[]) => {
+    socketIO?.on(WebSocketEmissionEvent.UpdateGameState, (actions: AllServerActionType[]) => {
       implementCardActions(actions);
     });
 
-    socketIO?.on(WebSocketEmissionEvent.LeftRoom, ({ name, actions }: { name: string; actions: AllActionType[] }) => {
-      // TODO: set a better data structure for removing member
-      // or define an action on backend to do it
-      implementCardActions(actions);
-    });
+    socketIO?.on(
+      WebSocketEmissionEvent.LeftRoom,
+      ({ name, actions }: { name: string; actions: AllServerActionType[] }) => {
+        // TODO: set a better data structure for removing member
+        // or define an action on backend to do it
+        implementCardActions(actions);
+      },
+    );
 
     return () => {
       socketIO?.off(WebSocketEmissionEvent.GetNewMember);
@@ -139,7 +140,7 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
       socketIO?.off(WebSocketEmissionEvent.RejectRoom);
       socketIO?.off(WebSocketEmissionEvent.CreateNewRoom);
       socketIO?.off(WebSocketEmissionEvent.StartGame);
-      socketIO?.off(WebSocketEmissionEvent.ReceiveAction);
+      socketIO?.off(WebSocketEmissionEvent.UpdateGameState);
       socketIO?.off(WebSocketEmissionEvent.LeftRoom);
     };
   }, [socketIO, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame]);

@@ -21,42 +21,45 @@ export interface WordCard {
 interface IGameContext {
   cardWords: List<WordCard | undefined> | undefined;
   cardStates: List<CardState> | undefined;
+  updateCardStates: (positions: number[], newState: CardState) => void;
   startGame: (shuffledWords: List<WordCard>, cardStates: List<CardState>) => void;
-  implementCardActions: (actions: AllActionType[]) => void;
+  implementCardActions: (actions: AllServerActionType[]) => void;
   currentPlayer: string | undefined;
   scores: Map<string, number> | undefined;
   winners: string[] | undefined;
   waitingForResponse: boolean;
   setWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>;
+  hasFlippedCard: boolean | undefined;
+  setHasFlippedCard: React.Dispatch<React.SetStateAction<boolean | undefined>>;
 }
 
-export type AllActionType =
-  | IResponseAction<ActionType.Open>
-  | IResponseAction<ActionType.Close>
-  | IResponseAction<ActionType.Deactivate>
-  | IResponseAction<ActionType.ChangeTurns>
-  | IResponseAction<ActionType.SetScores>
-  | IResponseAction<ActionType.SetMembers>;
+export type AllServerActionType =
+  | IResponseAction<ServerActionType.UpdateCardStates>
+  | IResponseAction<ServerActionType.ChangeTurns>
+  | IResponseAction<ServerActionType.SetScores>
+  | IResponseAction<ServerActionType.SetMembers>;
 
-export type IResponseAction<T extends ActionType> = {
+export type IResponseAction<T extends ServerActionType> = {
   type: T;
-  payload: T extends ActionType.ChangeTurns
+  payload: T extends ServerActionType.ChangeTurns
     ? IMember
-    : T extends ActionType.EndGame
+    : T extends ServerActionType.EndGame
     ? string[]
-    : T extends ActionType.SetScores
+    : T extends ServerActionType.SetScores
     ? Map<string, number>
-    : T extends ActionType.SetMembers
+    : T extends ServerActionType.SetMembers
     ? List<string>
-    : number[];
+    : List<CardState>; // when ActionType is `UpdateCardStates`, return cardStates directly
   player?: string;
   timeout?: number;
 };
 
-export enum ActionType {
-  Open = 'open card',
-  Close = 'close card',
-  Deactivate = 'deactivate card',
+export enum ClientActionType {
+  Open = 'open',
+}
+
+export enum ServerActionType {
+  UpdateCardStates = 'update card states',
   ChangeTurns = 'change turns',
   SetScores = 'set scores',
   SetMembers = 'set members',
@@ -70,7 +73,7 @@ interface IMember {
 }
 
 export interface ICardAction {
-  type: ActionType;
+  type: ClientActionType;
   position: number;
   player?: string;
   roomCode: string;
@@ -80,12 +83,15 @@ export const GameContext = createContext<IGameContext>({
   cardWords: undefined,
   startGame: () => console.log('Calling dummy setCardWords'),
   cardStates: undefined,
+  updateCardStates: () => console.log('Calling dummy updateCardStates'),
   implementCardActions: () => console.log('Calling dummy implementCardActions'),
   currentPlayer: undefined,
   scores: undefined,
   winners: undefined,
   waitingForResponse: false,
   setWaitingForResponse: () => console.log('Calling dummy setWaitingForResponse'),
+  hasFlippedCard: undefined,
+  setHasFlippedCard: () => console.log('Calling dummy setHasFlippedCard'),
 });
 
 export const useGame: () => IGameContext = () => useContext(GameContext);
@@ -103,60 +109,29 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   const [waitingForResponse, setWaitingForResponse] = useState(false);
   const { setAllMembers, setRoomState } = useRoomState();
   const [winners, setWinners] = useState<string[] | undefined>();
+  const [hasFlippedCard, setHasFlippedCard] = useState<boolean | undefined>();
 
   const act = useCallback(
-    <T extends ActionType>(action: IResponseAction<T>) => {
-      let newCardStates = cardStates || List();
+    <T extends ServerActionType>(action: IResponseAction<T>) => {
       switch (action.type) {
-        case ActionType.Open:
-          if (!cardStates) return;
-          const { payload: openPayload } = action as IResponseAction<ActionType.Open>;
-
-          openPayload.forEach(position => {
-            newCardStates = newCardStates.set(position, {
-              isActive: true,
-              isOpen: true,
-            });
-          });
-          setCardStates(newCardStates);
+        case ServerActionType.UpdateCardStates:
+          const { payload: cardStatesPayload } = action as IResponseAction<ServerActionType.UpdateCardStates>;
+          setCardStates(List(cardStatesPayload));
           break;
-        case ActionType.Close:
-          if (!cardStates) return;
-          const { payload: closePayload } = action as IResponseAction<ActionType.Close>;
-
-          closePayload.forEach(position => {
-            newCardStates = newCardStates.set(position, {
-              isActive: true,
-              isOpen: false,
-            });
-          });
-          setCardStates(newCardStates);
-          break;
-        case ActionType.Deactivate:
-          if (!cardStates) return;
-          const { payload: deactivatePayload } = action as IResponseAction<ActionType.Deactivate>;
-          deactivatePayload.forEach(position => {
-            newCardStates = newCardStates.set(position, {
-              isActive: false,
-              isOpen: true,
-            });
-          });
-          setCardStates(newCardStates);
-          break;
-        case ActionType.ChangeTurns:
-          const { payload: changeTurnsPayload } = action as IResponseAction<ActionType.ChangeTurns>;
+        case ServerActionType.ChangeTurns:
+          const { payload: changeTurnsPayload } = action as IResponseAction<ServerActionType.ChangeTurns>;
           setCurrentPlayer(changeTurnsPayload.name);
           break;
-        case ActionType.SetScores:
-          const { payload: scores } = action as IResponseAction<ActionType.SetScores>;
+        case ServerActionType.SetScores:
+          const { payload: scores } = action as IResponseAction<ServerActionType.SetScores>;
           setScores(Map(scores));
           break;
-        case ActionType.SetMembers:
-          const { payload: membersPayload } = action as IResponseAction<ActionType.SetMembers>;
+        case ServerActionType.SetMembers:
+          const { payload: membersPayload } = action as IResponseAction<ServerActionType.SetMembers>;
           setAllMembers && setAllMembers(List(membersPayload));
           break;
-        case ActionType.EndGame:
-          const { payload: winnersPayload } = action as IResponseAction<ActionType.EndGame>;
+        case ServerActionType.EndGame:
+          const { payload: winnersPayload } = action as IResponseAction<ServerActionType.EndGame>;
           setWinners(winnersPayload);
           setRoomState && setRoomState(RoomState.EndGame);
           break;
@@ -164,11 +139,22 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
           throw Error(`Action ${action} is not recognizable`);
       }
     },
-    [cardStates, setAllMembers, setRoomState],
+    [setAllMembers, setRoomState],
+  );
+
+  const updateCardStates = useCallback(
+    (positions: number[], newState: CardState) => {
+      let newCardStates: List<CardState> = cardStates || List();
+      positions.forEach(position => {
+        newCardStates = newCardStates.set(position, newState);
+      });
+      setCardStates(newCardStates);
+    },
+    [setCardStates, cardStates],
   );
 
   const timeoutFunc = useCallback(
-    (action: AllActionType, ms: number) => {
+    (action: AllServerActionType, ms: number) => {
       return new Promise(resolve => {
         setTimeout(() => {
           act(action);
@@ -180,7 +166,7 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const asyncAct = useCallback(
-    (action: AllActionType) => {
+    (action: AllServerActionType) => {
       return new Promise(async resolve => {
         const { timeout } = action;
         if (timeout) {
@@ -195,7 +181,7 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const asyncActions = useCallback(
-    async (actions: AllActionType[]) => {
+    async (actions: AllServerActionType[]) => {
       return Promise.all(
         actions.map(async action => {
           await asyncAct(action);
@@ -206,7 +192,7 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const implementCardActions = useCallback(
-    async (actions: AllActionType[]) => {
+    async (actions: AllServerActionType[]) => {
       await asyncActions(actions);
 
       setWaitingForResponse(false);
@@ -227,6 +213,7 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
       value={{
         cardWords,
         cardStates,
+        updateCardStates,
         implementCardActions,
         startGame,
         currentPlayer,
@@ -234,6 +221,8 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
         winners,
         waitingForResponse,
         setWaitingForResponse,
+        hasFlippedCard,
+        setHasFlippedCard,
       }}
     >
       {children}

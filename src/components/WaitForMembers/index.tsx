@@ -70,7 +70,7 @@ const WaitForMembers: FunctionComponent = () => {
         const isMatched = regexPattern.test(value);
         currentRuleStates[index] = isMatched;
       });
-      // console.log('currentRuleStates: ', currentRuleStates);
+
       setRuleStates(currentRuleStates);
     },
     [setWords, setRuleStates, rules],
