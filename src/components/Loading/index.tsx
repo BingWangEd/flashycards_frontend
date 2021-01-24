@@ -20,6 +20,7 @@ const Loading: FunctionComponent = () => {
       height: '30px',
       width: '450px',
       boxShadow: 'inset 0px 0px 0px 1px #C8C8CD',
+      borderRadius: '15px',
       overflow: 'hidden',
     },
     progressBar: {

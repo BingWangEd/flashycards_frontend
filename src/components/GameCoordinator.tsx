@@ -6,11 +6,14 @@ import WaitForMembers from './WaitForMembers';
 import PlayGame from './PlayGame';
 import GameOver from './GameOver';
 import Loading from './Loading';
+import ChooseMode from './ChooseMode';
 
 const GameCoordinator: FunctionComponent = () => {
   const { roomState } = useRoomState();
 
   switch (roomState) {
+    case RoomState.ChooseMode:
+      return <ChooseMode />;
     case RoomState.GetGameRoom:
       return <GetGameRoom />;
     case RoomState.SetPlayerName:
