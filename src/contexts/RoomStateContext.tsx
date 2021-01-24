@@ -7,6 +7,7 @@ export enum RoomState {
   WaitForMembers,
   PlayGame,
   EndGame,
+  Loading,
 }
 
 export enum PlayerRole {
