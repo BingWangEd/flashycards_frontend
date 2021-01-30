@@ -4,8 +4,8 @@ import BaseButton, { IProps as IButtonProps } from './BaseButton'
 const CircleButton: FunctionComponent<IButtonProps> = (props: IButtonProps) => {
   const style = {
     button: {
-      width: '35px',
-      height: '35px',
+      width: '32px',
+      height: '32px',
       font: '1.5em',
       backgroundColor: 'white',
       border: '1px solid #ccc',
