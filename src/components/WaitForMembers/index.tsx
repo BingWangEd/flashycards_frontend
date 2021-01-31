@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
 import { useRoomState, PlayerRole, RoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import Button from '../../uiUnits/Button';
+import SquareButton from '../../uiUnits/buttons/SquareButton';
 import Textarea from '../../uiUnits/Textarea';
 import { parseGameWords } from '../../utils/utils';
 
@@ -97,7 +97,7 @@ const WaitForMembers: FunctionComponent = () => {
           pattern="/^([^-\n]*-[^-\n]*)\n{7,}([^-\n]*-[^-\n]*)$/"
           title="To submit words for practice you need to follow the format"
         />
-        <Button label={'Submit the Words and Start Game'} onClick={handleSubmitWordsStartGame} type="submit" />
+        <SquareButton label={'Submit the Words and Start Game'} onClick={handleSubmitWordsStartGame} type="submit" />
       </div>
     );
   }

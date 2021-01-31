@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useCallback } from 'react';
 import { RoomState, useRoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import Button from '../../uiUnits/Button';
+import SquareButton from '../../uiUnits/buttons/SquareButton';
 import InputBox from '../../uiUnits/InputBox';
 
 const GetGameRoom: FunctionComponent = () => {
@@ -26,7 +26,7 @@ const GetGameRoom: FunctionComponent = () => {
       <InputBox label={'Enter A Room You Want to Join'} onSubmit={handleEnterARoom} />
       <h4>or</h4>
       <div>
-        <Button onClick={handleCreateNewRoom} label="Create a New Room" />
+        <SquareButton onClick={handleCreateNewRoom} label="Create a New Room" />
       </div>
     </div>
   );

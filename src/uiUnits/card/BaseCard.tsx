@@ -1,5 +1,5 @@
-import React, { FunctionComponent, memo, useCallback, useEffect, useRef } from 'react';
-import styled, { keyframes } from 'styled-components';
+import React, { FunctionComponent, memo, useCallback } from 'react';
+import { CallbackRef } from '../../utils/utils';
 
 export interface IProps {
   id: number;
@@ -9,6 +9,7 @@ export interface IProps {
   isActive?: boolean;
   flipCard: () => void;
   cardStyle?: React.CSSProperties;
+  getRef?: CallbackRef;
 }
 
 const BaseCard: FunctionComponent<IProps> = memo<IProps>(({
@@ -22,6 +23,7 @@ const BaseCard: FunctionComponent<IProps> = memo<IProps>(({
     width: '150px',
     height: '150px',
   },
+  getRef,
 }) => {
   const handleClick = useCallback(() => {
     if (!isActive) return;
@@ -75,6 +77,7 @@ const BaseCard: FunctionComponent<IProps> = memo<IProps>(({
         ...cardStyle
       }}
       onClick={handleClick}
+      ref={getRef}
     >
       <div
         style={{

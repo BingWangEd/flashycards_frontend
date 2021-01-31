@@ -14,7 +14,7 @@ const BaseDropdown = <T extends  React.SelectHTMLAttributes<HTMLSelectElement>['
     <div>
       {label && <p style={labelStyle}>{label}</p>}
       <select value={value} style={optionStyle} onChange={(event) => setValue(event.target.value)}>{
-        options.map((option: T) => <option value={option}>{option}</option>)
+        options.map((option: T, index: number) => <option key={index} value={option}>{option}</option>)
       }</select>
     </div>
   );

@@ -11,7 +11,9 @@ const ChooseMode: FunctionComponent = () => {
       justifyContent: 'space-between',
     },
     modeBox: {
-      width: '43%',
+      width: '40%',
+      maxWidth: '300px',
+      minWidth: '150px',
       borderRadius: '15px',
       margin: '15px',
       border: '2px solid #ccc',
@@ -21,7 +23,8 @@ const ChooseMode: FunctionComponent = () => {
       cursor: 'pointer',
     },
     container: {
-      width: '75%',
+      width: '65%',
+      maxWidth: '800px',
     },
     textContainer: {
       fontSize: '1.2em',

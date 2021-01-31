@@ -8,12 +8,11 @@ export enum CardColor {
   Yellow = 'yellow',
 }
 
-interface IDemoCard extends Pick<IBaseCardProps, 'id' | 'isFaceUp' | 'isActive' | 'flipCard'> {
+interface IDemoCard extends Pick<IBaseCardProps, 'id' | 'isFaceUp' | 'isActive' | 'flipCard' | 'getRef'> {
   color: CardColor,
 }
 
 const DemoCard: FunctionComponent<IDemoCard> = memo<IDemoCard>(({ color, ...props}) => {
-
   return (
     <BaseCard
       faceUp={WordSide(color)}
@@ -30,7 +29,7 @@ const DemoCard: FunctionComponent<IDemoCard> = memo<IDemoCard>(({ color, ...prop
 const WordSide = (color: CardColor) => {
   return (
     <p style={{
-      fontSize: '1.5em',
+      fontSize: '1.2em',
     }}>{color}</p>
   )
 }
