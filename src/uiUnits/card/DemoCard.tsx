@@ -1,4 +1,5 @@
-import React, { FunctionComponent, memo } from 'react';
+import React, { FunctionComponent, memo, useCallback, useState } from 'react';
+import { Content } from '../../components/SetCardsLayout';
 import BaseCard, { IProps as IBaseCardProps } from './BaseCard';
 
 export enum CardColor {
@@ -8,19 +9,35 @@ export enum CardColor {
   Yellow = 'yellow',
 }
 
-interface IDemoCard extends Pick<IBaseCardProps, 'id' | 'isFaceUp' | 'isActive' | 'flipCard' | 'getRef'> {
+interface IDemoCard extends Pick<IBaseCardProps, 'id' | 'isActive' | 'getRef'> {
   color: CardColor,
+  demoFaceUp: Content,
+  demoFaceDown: Content,
 }
 
-const DemoCard: FunctionComponent<IDemoCard> = memo<IDemoCard>(({ color, ...props}) => {
+const DemoCard: FunctionComponent<IDemoCard> = memo<IDemoCard>(({ color, demoFaceUp, demoFaceDown, ...props}) => {
+  const [isFaceUp, setIsFaceUp] = useState(true);
+  const getNode = useCallback((type: string) => {
+    switch (type) {
+      case Content.Word:
+        return WordSide(color);
+      case Content.Translation:
+        return ColorSide(color);
+      default:
+        return null;
+    }
+  }, [WordSide, ColorSide]);
+
   return (
     <BaseCard
-      faceUp={WordSide(color)}
-      faceDown={ColorSide(color)}
+      faceUp={getNode(demoFaceUp)}
+      faceDown={getNode(demoFaceDown)}
       cardStyle = {{
         width: '75px',
         height: '100px',
       }}
+      isFaceUp={isFaceUp}
+      flipCard={() => setIsFaceUp((prevValue) => !prevValue)}
       {...props}
     />
   )

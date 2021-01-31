@@ -1,11 +1,15 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, useCallback, useState } from 'react';
 import { Content } from '.';
 import CircleButton from '../../uiUnits/buttons/CircleButton';
 import Dropdown from '../../uiUnits/dropdowns/Dropdown';
 
-const AddCardSet: FunctionComponent = () => {
+const AddCardSet: FunctionComponent<{
+  add: (faceUpOption: Content, faceDownOption: Content, isRandomized: string) => void;
+}> = ({add}) => {
   const [faceUpOption, setFaceUpOption] = useState<string>(Content.Word);
   const [faceDownOption, setFaceDownOption] = useState<string>(Content.Translation);
+  const [isRandomized, setIsRandomized] = useState<string>('no');
+
   const style = {
     container: {
       display: 'flex',
@@ -13,13 +17,17 @@ const AddCardSet: FunctionComponent = () => {
       justifyContent: 'flex-start',
     }
   }
+
+  const handleSubmit = useCallback(() => {
+    add(faceUpOption as Content, faceDownOption as Content, isRandomized);
+  }, [add, faceUpOption, faceDownOption, isRandomized]);
   
   return (
     <div style={style.container}>
       <div>
         <CircleButton
           label='➕'
-          onClick={() => {}}
+          onClick={handleSubmit}
         />
       </div>
       <div style={{marginLeft: '10px', textAlign: 'left'}}>
@@ -35,6 +43,12 @@ const AddCardSet: FunctionComponent = () => {
           options={Object.values(Content)}
           value={faceDownOption}
           setValue={setFaceDownOption}
+        />
+        <Dropdown
+          label='Randomize this set of cards'
+          options={['yes', 'no']}
+          value={isRandomized}
+          setValue={setIsRandomized}
         />
       </div>
     </div>
