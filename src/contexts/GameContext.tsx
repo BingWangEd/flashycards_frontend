@@ -1,29 +1,50 @@
 import { List, Map } from 'immutable';
 import React, { createContext, useContext, ReactNode, useState, useCallback, FunctionComponent } from 'react';
-import { RoomState, useRoomState } from './RoomStateContext';
+import { Content } from '../components/SetCardsLayout';
+import { Mode, RoomState, useRoomState } from './RoomStateContext';
 
 export enum CardSide {
   Word = 'word',
   Translation = 'translation',
 }
 
-export interface CardState {
+export interface GameCardState {
   isActive: boolean;
   isOpen: boolean;
 }
 
-export interface WordCard {
+export interface GameWordCard {
   word: string;
   side: CardSide;
   counterpart: string;
 }
 
-interface IGameContext {
-  cardWords: List<WordCard | undefined> | undefined;
-  cardStates: List<CardState> | undefined;
-  updateCardStates: (positions: number[], newState: CardState) => void;
-  startGame: (shuffledWords: List<WordCard>, cardStates: List<CardState>) => void;
-  implementCardActions: (actions: AllServerActionType[]) => void;
+export interface FreeCardState {
+  id: number;
+  isFaceUp?: boolean;
+  isActive?: boolean;
+  position: {
+    x: number, 
+    y: number
+  };
+}
+
+export interface FreeWordCard {
+  id: number;
+  faceUp: Content;
+  faceDown: Content;
+  content: [string, string];
+}
+
+type WordCard<M extends Mode> = M extends Mode.Free ? FreeWordCard : GameWordCard;
+type CardState<M extends Mode> = M extends Mode.Free ? FreeCardState : GameCardState;
+
+interface IGameContext<M extends Mode> {
+  cardWords: List<WordCard<M>> | undefined;
+  cardStates: List<CardState<M>> | undefined;
+  updateCardStates: (positions: number[], newState: CardState<M>) => void;
+  startGame: (shuffledCards: List<WordCard<M>>, cardStates: List<CardState<M>>) => void;
+  implementCardActions: (actions: AllServerActionType<M>[]) => void;
   currentPlayer: string | undefined;
   scores: Map<string, number> | undefined;
   winners: string[] | undefined;
@@ -33,13 +54,13 @@ interface IGameContext {
   setHasFlippedCard: React.Dispatch<React.SetStateAction<boolean | undefined>>;
 }
 
-export type AllServerActionType =
-  | IResponseAction<ServerActionType.UpdateCardStates>
-  | IResponseAction<ServerActionType.ChangeTurns>
-  | IResponseAction<ServerActionType.SetScores>
-  | IResponseAction<ServerActionType.SetMembers>;
+export type AllServerActionType<M extends Mode> =
+  | IResponseAction<ServerActionType.UpdateCardStates, M>
+  | IResponseAction<ServerActionType.ChangeTurns, M>
+  | IResponseAction<ServerActionType.SetScores, M>
+  | IResponseAction<ServerActionType.SetMembers, M>;
 
-export type IResponseAction<T extends ServerActionType> = {
+export type IResponseAction<T extends ServerActionType, M extends Mode> = {
   type: T;
   payload: T extends ServerActionType.ChangeTurns
     ? IMember
@@ -49,7 +70,7 @@ export type IResponseAction<T extends ServerActionType> = {
     ? Map<string, number>
     : T extends ServerActionType.SetMembers
     ? List<string>
-    : List<CardState>; // when ActionType is `UpdateCardStates`, return cardStates directly
+    : List<CardState<M>>; // when ActionType is `UpdateCardStates`, return cardStates directly
   player?: string;
   timeout?: number;
 };
@@ -79,7 +100,9 @@ export interface ICardAction {
   roomCode: string;
 }
 
-export const GameContext = createContext<IGameContext>({
+// <T extends Mode>(): IGameContext<T> => 
+// IGameContext
+export const GameContext = createContext<IGameContext<any>>({
   cardWords: undefined,
   startGame: () => console.log('Calling dummy setCardWords'),
   cardStates: undefined,
@@ -94,15 +117,18 @@ export const GameContext = createContext<IGameContext>({
   setHasFlippedCard: () => console.log('Calling dummy setHasFlippedCard'),
 });
 
-export const useGame: () => IGameContext = () => useContext(GameContext);
+// export const GameContext = createContext(undefined);
 
-export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = ({
+type UseGameContextType = <M extends Mode>() => IGameContext<M>;
+export const useGame: UseGameContextType = () => useContext(GameContext);
+
+export const GameContextProvider:FunctionComponent<{ children: ReactNode }> = <M extends Mode>({
   children,
 }: {
   children: ReactNode;
 }) => {
-  const [cardWords, setCardWords] = useState<List<WordCard>>();
-  const [cardStates, setCardStates] = useState<List<CardState> | undefined>();
+  const [cardWords, setCardWords] = useState<List<WordCard<M>>>(List([]));
+  const [cardStates, setCardStates] = useState<List<CardState<M>> | undefined>();
   const [currentPlayer, setCurrentPlayer] = useState<string | undefined>();
   const [scores, setScores] = useState<Map<string, number>>(Map());
   // Deactivate any interaction until received response to action
@@ -112,26 +138,26 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   const [hasFlippedCard, setHasFlippedCard] = useState<boolean | undefined>();
 
   const act = useCallback(
-    <T extends ServerActionType>(action: IResponseAction<T>) => {
+    <T extends ServerActionType>(action: IResponseAction<T, M>) => {
       switch (action.type) {
         case ServerActionType.UpdateCardStates:
-          const { payload: cardStatesPayload } = action as IResponseAction<ServerActionType.UpdateCardStates>;
+          const { payload: cardStatesPayload } = action as IResponseAction<ServerActionType.UpdateCardStates, M>;
           setCardStates(List(cardStatesPayload));
           break;
         case ServerActionType.ChangeTurns:
-          const { payload: changeTurnsPayload } = action as IResponseAction<ServerActionType.ChangeTurns>;
+          const { payload: changeTurnsPayload } = action as IResponseAction<ServerActionType.ChangeTurns, M>;
           setCurrentPlayer(changeTurnsPayload.name);
           break;
         case ServerActionType.SetScores:
-          const { payload: scores } = action as IResponseAction<ServerActionType.SetScores>;
+          const { payload: scores } = action as IResponseAction<ServerActionType.SetScores, M>;
           setScores(Map(scores));
           break;
         case ServerActionType.SetMembers:
-          const { payload: membersPayload } = action as IResponseAction<ServerActionType.SetMembers>;
+          const { payload: membersPayload } = action as IResponseAction<ServerActionType.SetMembers, M>;
           setAllMembers && setAllMembers(List(membersPayload));
           break;
         case ServerActionType.EndGame:
-          const { payload: winnersPayload } = action as IResponseAction<ServerActionType.EndGame>;
+          const { payload: winnersPayload } = action as IResponseAction<ServerActionType.EndGame, M>;
           setWinners(winnersPayload);
           setRoomState && setRoomState(RoomState.EndGame);
           break;
@@ -143,8 +169,8 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const updateCardStates = useCallback(
-    (positions: number[], newState: CardState) => {
-      let newCardStates: List<CardState> = cardStates || List();
+    (positions: number[], newState: CardState<M>) => {
+      let newCardStates: List<CardState<M>> = cardStates || List();
       positions.forEach(position => {
         newCardStates = newCardStates.set(position, newState);
       });
@@ -154,7 +180,7 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const timeoutFunc = useCallback(
-    (action: AllServerActionType, ms: number) => {
+    (action: AllServerActionType<M>, ms: number) => {
       return new Promise(resolve => {
         setTimeout(() => {
           act(action);
@@ -166,7 +192,7 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const asyncAct = useCallback(
-    (action: AllServerActionType) => {
+    (action: AllServerActionType<M>) => {
       return new Promise(async resolve => {
         const { timeout } = action;
         if (timeout) {
@@ -181,7 +207,7 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const asyncActions = useCallback(
-    async (actions: AllServerActionType[]) => {
+    async (actions: AllServerActionType<M>[]) => {
       return Promise.all(
         actions.map(async action => {
           await asyncAct(action);
@@ -192,7 +218,7 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const implementCardActions = useCallback(
-    async (actions: AllServerActionType[]) => {
+    async (actions: AllServerActionType<M>[]) => {
       await asyncActions(actions);
 
       setWaitingForResponse(false);
@@ -201,8 +227,8 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
   );
 
   const startGame = useCallback(
-    (shuffledWords: List<WordCard>, cardStates: List<CardState>) => {
-      setCardWords(List(shuffledWords));
+    (shuffledCards: List<WordCard<M>>, cardStates: List<CardState<M>>) => {
+      setCardWords(List(shuffledCards));
       setCardStates(List(cardStates));
     },
     [setCardWords, setCardStates],
@@ -213,8 +239,10 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = (
       value={{
         cardWords,
         cardStates,
+        // @ts-ignore
         updateCardStates,
         implementCardActions,
+        // @ts-ignore
         startGame,
         currentPlayer,
         scores,

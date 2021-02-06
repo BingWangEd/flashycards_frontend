@@ -72,7 +72,9 @@ const LayCards: FunctionComponent = () => {
         return (
           <Card
             key={index}
+            // @ts-ignore
             word={(word && word.word) || ''}
+            // @ts-ignore
             isOpen={cardStates?.get(index)?.isOpen || false}
             isActive={isActive}
             position={index}
