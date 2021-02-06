@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useState } from 'react';
+import React, { FunctionComponent } from 'react';
 import { ICard } from '.';
 import DemoCard, { CardColor } from '../../uiUnits/card/DemoCard';
 
@@ -57,7 +57,7 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
         cardSetPositions[index] = wordSet.map((word, i) => {
           return {
             x: index*(wordSets.length * (cardWidth + MARGIN_PX) + SET_SPACE_PX) + (i%variant)*(cardWidth + MARGIN_PX),
-            y: Math.floor(i/(setPerRow))*(cardHeight + MARGIN_PX),
+            y: Math.floor(i/setPerRow)*(cardHeight + MARGIN_PX),
           }
         });
       });
@@ -73,8 +73,6 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
       });
     }
   }
-
-  console.log('cardSetPositions: ', cardSetPositions);
   
   return (
     <div>

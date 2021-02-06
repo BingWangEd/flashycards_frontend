@@ -18,8 +18,8 @@ export enum PlayerRole {
 }
 
 export enum Mode {
-  Free,
-  Game,
+  Free = 'free',
+  Game = 'game',
 }
 
 interface IRoomStateContext {

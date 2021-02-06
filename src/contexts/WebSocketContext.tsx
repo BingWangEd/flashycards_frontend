@@ -7,10 +7,11 @@ import React, {
   useEffect,
   FunctionComponent,
 } from 'react';
-import { useRoomState, RoomState, PlayerRole } from './RoomStateContext';
+import { useRoomState, RoomState, PlayerRole, Mode } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
-import { AllServerActionType, CardState, ICardAction, useGame, WordCard } from './GameContext';
+import { AllServerActionType, GameCardState, ICardAction, useGame, GameWordCard } from './GameContext';
+import { IRule } from '../components/SetCardsLayout';
 
 // Events sent to websocket
 export enum WebSocketEvent {
@@ -18,6 +19,7 @@ export enum WebSocketEvent {
   EnterRoom = 'enter room',
   SubmitName = 'submit name',
   SetWords = 'set words',
+  ConfirmCardsLayout = 'confirm cards layout',
   SendAction = 'send action',
 }
 
@@ -29,6 +31,7 @@ enum WebSocketEmissionEvent {
   RejectRoom = 'rejected room exists',
   JoinRoom = 'joined room',
   CreateNewRoom = 'created new room',
+  ReadyToSetLayout = 'ready to set layout',
   StartGame = 'started game',
   UpdateGameState = 'update gaem state',
   LeftRoom = 'member left room',
@@ -40,6 +43,7 @@ interface IWebSocketContext {
   createRoom: () => void;
   submitName: (playerName: string) => void;
   setWords: (words: Array<[string, string]>) => void;
+  confirmCardsLayout: (layoutRules: IRule[], groupWordsBySet: boolean) => void;
   sendAction: (action: ICardAction) => void;
 }
 
@@ -49,6 +53,7 @@ export const WebSocketContext = createContext<IWebSocketContext>({
   createRoom: () => console.log('Calling dummy CreateRoom.'),
   submitName: playerName => console.log('Calling dummy submitName.'),
   setWords: words => console.log('Calling dummy setWords.'),
+  confirmCardsLayout: layoutRule => console.log('confirmCardsLayout'),
   sendAction: action => console.log('Calling dummy sendAction.'),
 });
 
@@ -58,7 +63,7 @@ interface IProp {
 }
 export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ children }: IProp) => {
   const [socketIO, setSocketIO] = useState<SocketIOClient.Socket | undefined>();
-  const { setRoomState, setPlayerName, setRoomCode, roomCode, playerRole, setPlayerRole } = useRoomState();
+  const { setRoomState, setPlayerName, setRoomCode, roomCode, playerRole, setPlayerRole, mode } = useRoomState();
   const { startGame, implementCardActions } = useGame();
 
   const connectToWebSocket = useCallback(() => {
@@ -81,7 +86,8 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
   }, [socketIO]);
 
   useEffect(() => {
-    socketIO?.on(WebSocketEmissionEvent.GetNewMember, ({ actions }: { actions: AllServerActionType[] }) => {
+    if (!mode) return;
+    socketIO?.on(WebSocketEmissionEvent.GetNewMember, ({ actions }: { actions: AllServerActionType<typeof mode>[] }) => {
       implementCardActions(actions);
     });
 
@@ -107,27 +113,47 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
     socketIO?.on(
       WebSocketEmissionEvent.StartGame,
       ({
-        shuffledWords,
+        shuffledCards,
         cardStates,
         actions,
       }: {
-        shuffledWords: List<WordCard>;
-        cardStates: List<CardState>;
-        actions: AllServerActionType[];
+        shuffledCards: List<GameWordCard>;
+        cardStates: List<GameCardState>;
+        actions: AllServerActionType<typeof mode>[];
       }) => {
-        startGame(List(shuffledWords), List(cardStates));
-        implementCardActions(actions);
-        setRoomState && setRoomState(RoomState.PlayGame);
+        if (!setRoomState) return;
+
+        switch (mode) {
+          case Mode.Game:
+            startGame(List(shuffledCards), List(cardStates));
+            implementCardActions(actions);
+            setRoomState(RoomState.PlayGame);
+            return;
+          case Mode.Free:
+            console.log('shuffled cards: ', shuffledCards);
+            console.log('cardStates: ', cardStates);
+            console.log('actions: ', actions);
+            startGame(List(shuffledCards), List(cardStates));
+            setRoomState(RoomState.PlayGame);
+            return;
+          default:
+            throw Error(`${mode} does not exist`);
+        }
+        
       },
     );
 
-    socketIO?.on(WebSocketEmissionEvent.UpdateGameState, (actions: AllServerActionType[]) => {
+    socketIO?.on(WebSocketEmissionEvent.ReadyToSetLayout, () => {
+      setRoomState(RoomState.SetCardsLayout);
+    });
+
+    socketIO?.on(WebSocketEmissionEvent.UpdateGameState, (actions: AllServerActionType<typeof mode>[]) => {
       implementCardActions(actions);
     });
 
     socketIO?.on(
       WebSocketEmissionEvent.LeftRoom,
-      ({ name, actions }: { name: string; actions: AllServerActionType[] }) => {
+      ({ name, actions }: { name: string; actions: AllServerActionType<typeof mode>[] }) => {
         // TODO: set a better data structure for removing member
         // or define an action on backend to do it
         implementCardActions(actions);
@@ -140,10 +166,11 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
       socketIO?.off(WebSocketEmissionEvent.RejectRoom);
       socketIO?.off(WebSocketEmissionEvent.CreateNewRoom);
       socketIO?.off(WebSocketEmissionEvent.StartGame);
+      socketIO?.off(WebSocketEmissionEvent.ReadyToSetLayout);
       socketIO?.off(WebSocketEmissionEvent.UpdateGameState);
       socketIO?.off(WebSocketEmissionEvent.LeftRoom);
     };
-  }, [socketIO, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame]);
+  }, [socketIO, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame, mode]);
 
   const submitName = useCallback(
     (playerName: string) => {
@@ -172,13 +199,13 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
   const createRoom = useCallback(async () => {
     if (socketIO) {
       // TODO: catch error when webSocket connection is not created
-      socketIO.emit(WebSocketEvent.CreateRoom);
+      socketIO.emit(WebSocketEvent.CreateRoom, { mode });
     } else {
       const socket = await connectToWebSocket();
-      socket.emit(WebSocketEvent.CreateRoom);
+      socket.emit(WebSocketEvent.CreateRoom, { mode });
     }
     setPlayerRole && setPlayerRole(PlayerRole.Teacher);
-  }, [socketIO, connectToWebSocket, setPlayerRole]);
+  }, [socketIO, connectToWebSocket, setPlayerRole, mode]);
 
   const setWords = useCallback(
     (words: Array<[string, string]>) => {
@@ -198,6 +225,14 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
     [socketIO],
   );
 
+  const confirmCardsLayout = useCallback((layoutRules: IRule[], groupWordsBySet: boolean) => {
+    socketIO?.emit(WebSocketEvent.ConfirmCardsLayout, {
+      roomCode,
+      layoutRules,
+      groupWordsBySet,
+    });
+  }, [socketIO, roomCode]);
+
   return (
     <WebSocketContext.Provider
       value={{
@@ -206,6 +241,7 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
         createRoom,
         submitName,
         setWords,
+        confirmCardsLayout,
         sendAction,
       }}
     >
