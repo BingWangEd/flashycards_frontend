@@ -1,9 +1,14 @@
 import React, { FunctionComponent } from 'react';
 import BaseDropdown, { IProps as IBaseDropdownProps } from './BaseDropdown';
 
-type IDropdown<T extends  React.SelectHTMLAttributes<HTMLSelectElement>['value'] > = Pick<IBaseDropdownProps<T>, 'label' | 'options' | 'setValue' | 'value'>;
+type IDropdown<T extends React.SelectHTMLAttributes<HTMLSelectElement>['value']> = Pick<
+  IBaseDropdownProps<T>,
+  'label' | 'options' | 'setValue' | 'value'
+>;
 
-const Dropdown = <T extends  React.SelectHTMLAttributes<HTMLSelectElement>['value'] >(props: IDropdown<T>) => {
+const Dropdown = <T extends React.SelectHTMLAttributes<HTMLSelectElement>['value']>(
+  props: IDropdown<T>,
+): ReturnType<FunctionComponent<IDropdown<T>>> => {
   const style = {
     optionStyle: {
       width: '100px',
@@ -12,11 +17,9 @@ const Dropdown = <T extends  React.SelectHTMLAttributes<HTMLSelectElement>['valu
       width: '100px',
       display: 'inline-block',
       margin: '6px 0',
-    }
-  }
-  return (
-    <BaseDropdown optionStyle={style.optionStyle} labelStyle={style.labelStyle} {...props} />
-  );
+    },
+  };
+  return <BaseDropdown optionStyle={style.optionStyle} labelStyle={style.labelStyle} {...props} />;
 };
 
 export default Dropdown;

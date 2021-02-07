@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useCallback, useState } from 'react';
+import React, { FunctionComponent } from 'react';
 import { useRoomState, RoomState } from '../contexts/RoomStateContext';
 import GetGameRoom from './GetGameRoom';
 import EnterPlayerName from './EnterPlayerName';
@@ -7,17 +7,11 @@ import PlayGame from './PlayGame';
 import GameOver from './GameOver';
 import Loading from './Loading';
 import ChooseMode from './ChooseMode';
-import CircleButton from '../uiUnits/buttons/CircleButton';
-import DemoCard, { CardColor } from '../uiUnits/card/DemoCard';
 import SetCardsLayout from './SetCardsLayout';
+import DisplayCardCanvas from './DisplayCardCanvas';
 
 const GameCoordinator: FunctionComponent = () => {
   const { roomState } = useRoomState();
-  const [isSideUp, setIsSideUp] = useState(true);
-
-  const flipCard = useCallback(() => {
-    setIsSideUp(!isSideUp);
-  }, [isSideUp, setIsSideUp]);
 
   switch (roomState) {
     case RoomState.ChooseMode:
@@ -29,9 +23,11 @@ const GameCoordinator: FunctionComponent = () => {
     case RoomState.WaitForMembers:
       return <WaitForMembers />;
     case RoomState.SetCardsLayout:
-      return <SetCardsLayout allWordNumber={8} />
-    case RoomState.PlayGame:
+      return <SetCardsLayout allWordNumber={8} />;
+    case RoomState.PlayCardMatchGame:
       return <PlayGame />;
+    case RoomState.PlayFreeCard:
+      return <DisplayCardCanvas />;
     case RoomState.EndGame:
       return <GameOver />;
     case RoomState.Loading:

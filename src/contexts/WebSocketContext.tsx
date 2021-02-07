@@ -87,9 +87,12 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
 
   useEffect(() => {
     if (!mode) return;
-    socketIO?.on(WebSocketEmissionEvent.GetNewMember, ({ actions }: { actions: AllServerActionType<typeof mode>[] }) => {
-      implementCardActions(actions);
-    });
+    socketIO?.on(
+      WebSocketEmissionEvent.GetNewMember,
+      ({ actions }: { actions: AllServerActionType<typeof mode>[] }) => {
+        implementCardActions(actions);
+      },
+    );
 
     socketIO?.on(WebSocketEmissionEvent.ConfirmRoom, ({ roomCode }: { roomCode: string }) => {
       setRoomCode && setRoomCode(roomCode);
@@ -127,19 +130,18 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
           case Mode.Game:
             startGame(List(shuffledCards), List(cardStates));
             implementCardActions(actions);
-            setRoomState(RoomState.PlayGame);
+            setRoomState(RoomState.PlayCardMatchGame);
             return;
           case Mode.Free:
             console.log('shuffled cards: ', shuffledCards);
             console.log('cardStates: ', cardStates);
             console.log('actions: ', actions);
             startGame(List(shuffledCards), List(cardStates));
-            setRoomState(RoomState.PlayGame);
+            setRoomState(RoomState.PlayFreeCard);
             return;
           default:
             throw Error(`${mode} does not exist`);
         }
-        
       },
     );
 
@@ -148,6 +150,7 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
     });
 
     socketIO?.on(WebSocketEmissionEvent.UpdateGameState, (actions: AllServerActionType<typeof mode>[]) => {
+      console.log('updateState actions: ', actions);
       implementCardActions(actions);
     });
 
@@ -225,13 +228,16 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
     [socketIO],
   );
 
-  const confirmCardsLayout = useCallback((layoutRules: IRule[], groupWordsBySet: boolean) => {
-    socketIO?.emit(WebSocketEvent.ConfirmCardsLayout, {
-      roomCode,
-      layoutRules,
-      groupWordsBySet,
-    });
-  }, [socketIO, roomCode]);
+  const confirmCardsLayout = useCallback(
+    (layoutRules: IRule[], groupWordsBySet: boolean) => {
+      socketIO?.emit(WebSocketEvent.ConfirmCardsLayout, {
+        roomCode,
+        layoutRules,
+        groupWordsBySet,
+      });
+    },
+    [socketIO, roomCode],
+  );
 
   return (
     <WebSocketContext.Provider

@@ -26,52 +26,57 @@ export type ICard = {
   faceDown: Content;
   isFaceUp: boolean;
   content: [string, string]; // [word, translation]
-}
+};
 
 export type IRule = Pick<ICard, 'faceUp' | 'faceDown'> & {
   isRandomized: boolean;
 };
 
-const DemoGameWords =[
+const DemoGameWords = [
   [CardColor.Red, `color: ${CardColor.Red}`],
   [CardColor.Green, `color: ${CardColor.Green}`],
   [CardColor.Blue, `color: ${CardColor.Blue}`],
   [CardColor.Yellow, `color: ${CardColor.Yellow}`],
 ];
 
-const SetCardsLayout: FunctionComponent<{allWordNumber: number}> = ({allWordNumber}) => {
-  const [wordSets, setWordSets] = useState<(ICard[])[]>([]);
+const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordNumber }) => {
+  const [wordSets, setWordSets] = useState<ICard[][]>([]);
   const [layoutRules, setLayoutRules] = useState<IRule[]>([]);
   const [groupWordsBySet, setGroupWordsBySet] = useState(false);
   const { confirmCardsLayout } = useWebSocketContext();
 
-  const add = useCallback((faceUpOption: Content, faceDownOption: Content, isRandomized: string) => {
-    const wordCards: ICard[] = DemoGameWords.map(([word, translation], index) => ({
-      id: index,
-      faceUp: faceUpOption,
-      faceDown: faceDownOption,
-      isFaceUp: true,
-      content: [word, translation]
-    }));
-
-    if (isRandomized === 'yes') {
-      setWordSets(wordSets.concat([shuffle(wordCards, 1)]));
-    } else {
-      setWordSets(wordSets.concat([wordCards]));
-    }
-
-    setLayoutRules((prevRules) => {
-      return prevRules.concat([{
+  const add = useCallback(
+    (faceUpOption: Content, faceDownOption: Content, isRandomized: string) => {
+      const wordCards: ICard[] = DemoGameWords.map(([word, translation], index) => ({
+        id: index,
         faceUp: faceUpOption,
         faceDown: faceDownOption,
-        isRandomized: isRandomized === 'yes' ? true : false,
-      }]);
-    });
-  }, [wordSets, setWordSets]);
-  
+        isFaceUp: true,
+        content: [word, translation],
+      }));
+
+      if (isRandomized === 'yes') {
+        setWordSets(wordSets.concat([shuffle(wordCards, 1)]));
+      } else {
+        setWordSets(wordSets.concat([wordCards]));
+      }
+
+      setLayoutRules(prevRules => {
+        return prevRules.concat([
+          {
+            faceUp: faceUpOption,
+            faceDown: faceDownOption,
+            isRandomized: isRandomized === 'yes' ? true : false,
+          },
+        ]);
+      });
+    },
+    [wordSets, setWordSets],
+  );
+
   return (
     <div>
-      {wordSets.length <= 1 && <AddCardSet add={add}/>}
+      {wordSets.length <= 1 && <AddCardSet add={add} />}
       <CardDemoCanvas
         wordSets={wordSets}
         groupWordsBySet={groupWordsBySet}
@@ -81,20 +86,20 @@ const SetCardsLayout: FunctionComponent<{allWordNumber: number}> = ({allWordNumb
         }}
       />
       <div>
-        <SquareButton 
+        <SquareButton
           label={groupWordsBySet ? 'Lay words next to words from the other set' : 'Group words by set'}
           onClick={() => {
             setGroupWordsBySet(!groupWordsBySet);
           }}
         />
-        <SquareButton 
+        <SquareButton
           label={'Clear all sets'}
           onClick={() => {
             setWordSets([]);
             setLayoutRules([]);
           }}
         />
-        <SquareButton 
+        <SquareButton
           label={'Confirm Layout'}
           color={'red'}
           onClick={() => {

@@ -52,10 +52,13 @@ const ChooseMode: FunctionComponent = () => {
         Choose a mode to start
       </h2>
       <div style={style.modeContainer}>
-        <div style={style.modeBox} onClick={(e) => {
-          e.preventDefault();
-          handleChooseMode(Mode.Free);
-        }}>
+        <div
+          style={style.modeBox}
+          onClick={e => {
+            e.preventDefault();
+            handleChooseMode(Mode.Free);
+          }}
+        >
           <h2 style={style.symble}>🃏</h2>
           <h2>Free Mode</h2>
           <div style={style.textContainer}>
@@ -63,10 +66,13 @@ const ChooseMode: FunctionComponent = () => {
             <p>Live interact with cards: Flip, move and play with all participants</p>
           </div>
         </div>
-        <div style={style.modeBox} onClick={(e) => {
-          e.preventDefault();
-          handleChooseMode(Mode.Game);
-        }}>
+        <div
+          style={style.modeBox}
+          onClick={e => {
+            e.preventDefault();
+            handleChooseMode(Mode.Game);
+          }}
+        >
           <h2 style={style.symble}>🎲</h2>
           <h2>Game Mode</h2>
           <div style={style.textContainer}>

@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import BaseButton, { IProps as IButtonProps } from './BaseButton'
+import BaseButton, { IProps as IButtonProps } from './BaseButton';
 
 const CircleButton: FunctionComponent<IButtonProps> = (props: IButtonProps) => {
   const style = {
@@ -13,12 +13,7 @@ const CircleButton: FunctionComponent<IButtonProps> = (props: IButtonProps) => {
     },
   };
 
-  return (
-    <BaseButton
-      style={style.button}
-      {...props}
-    />
-  );
+  return <BaseButton style={style.button} {...props} />;
 };
 
 export default CircleButton;

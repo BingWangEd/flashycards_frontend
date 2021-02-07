@@ -20,12 +20,12 @@ export interface GameWordCard {
 }
 
 export interface FreeCardState {
-  id: number;
+  //id: number;
   isFaceUp?: boolean;
   isActive?: boolean;
   position: {
-    x: number, 
-    y: number
+    x: number;
+    y: number;
   };
 }
 
@@ -100,7 +100,7 @@ export interface ICardAction {
   roomCode: string;
 }
 
-// <T extends Mode>(): IGameContext<T> => 
+// <T extends Mode>(): IGameContext<T> =>
 // IGameContext
 export const GameContext = createContext<IGameContext<any>>({
   cardWords: undefined,
@@ -122,7 +122,7 @@ export const GameContext = createContext<IGameContext<any>>({
 type UseGameContextType = <M extends Mode>() => IGameContext<M>;
 export const useGame: UseGameContextType = () => useContext(GameContext);
 
-export const GameContextProvider:FunctionComponent<{ children: ReactNode }> = <M extends Mode>({
+export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = <M extends Mode>({
   children,
 }: {
   children: ReactNode;
@@ -170,6 +170,7 @@ export const GameContextProvider:FunctionComponent<{ children: ReactNode }> = <M
 
   const updateCardStates = useCallback(
     (positions: number[], newState: CardState<M>) => {
+      console.log('updateCardStates');
       let newCardStates: List<CardState<M>> = cardStates || List();
       positions.forEach(position => {
         newCardStates = newCardStates.set(position, newState);
