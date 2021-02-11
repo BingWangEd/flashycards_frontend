@@ -8,6 +8,9 @@ export interface IProps {
   isFaceUp?: boolean;
   isActive?: boolean;
   flipCard: () => void;
+  moveCard?: (e: React.DragEvent<HTMLDivElement>) => void;
+  startMoveCard?: (e: React.DragEvent<HTMLDivElement>) => void;
+  draggable?: boolean;
   cardStyle?: React.CSSProperties;
   getRef?: CallbackRef;
 }
@@ -20,6 +23,9 @@ const BaseCard: FunctionComponent<IProps> = memo<IProps>(
     isFaceUp = true,
     isActive = true,
     flipCard,
+    moveCard,
+    startMoveCard,
+    draggable = false,
     cardStyle = {
       width: '150px',
       height: '150px',
@@ -72,12 +78,15 @@ const BaseCard: FunctionComponent<IProps> = memo<IProps>(
 
     return (
       <div
+        draggable
         style={{
           ...style.flipContainer,
           ...style.card,
           ...cardStyle,
         }}
         onClick={handleClick}
+        onDragStart={startMoveCard}
+        onDrag={moveCard}
         ref={getRef}
       >
         <div

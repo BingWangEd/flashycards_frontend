@@ -21,8 +21,8 @@ export interface GameWordCard {
 
 export interface FreeCardState {
   //id: number;
-  isFaceUp?: boolean;
-  isActive?: boolean;
+  isFaceUp: boolean;
+  isActive: boolean;
   position: {
     x: number;
     y: number;
@@ -42,7 +42,7 @@ type CardState<M extends Mode> = M extends Mode.Free ? FreeCardState : GameCardS
 interface IGameContext<M extends Mode> {
   cardWords: List<WordCard<M>> | undefined;
   cardStates: List<CardState<M>> | undefined;
-  updateCardStates: (positions: number[], newState: CardState<M>) => void;
+  updateCardStates: (positions: number[], newState: Partial<CardState<M>>) => void;
   startGame: (shuffledCards: List<WordCard<M>>, cardStates: List<CardState<M>>) => void;
   implementCardActions: (actions: AllServerActionType<M>[]) => void;
   currentPlayer: string | undefined;
@@ -100,9 +100,7 @@ export interface ICardAction {
   roomCode: string;
 }
 
-// <T extends Mode>(): IGameContext<T> =>
-// IGameContext
-export const GameContext = createContext<IGameContext<any>>({
+export const GameContext = createContext<IGameContext<Mode>>({
   cardWords: undefined,
   startGame: () => console.log('Calling dummy setCardWords'),
   cardStates: undefined,
@@ -116,8 +114,6 @@ export const GameContext = createContext<IGameContext<any>>({
   hasFlippedCard: undefined,
   setHasFlippedCard: () => console.log('Calling dummy setHasFlippedCard'),
 });
-
-// export const GameContext = createContext(undefined);
 
 type UseGameContextType = <M extends Mode>() => IGameContext<M>;
 export const useGame: UseGameContextType = () => useContext(GameContext);
@@ -169,11 +165,16 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = <
   );
 
   const updateCardStates = useCallback(
-    (positions: number[], newState: CardState<M>) => {
-      console.log('updateCardStates');
-      let newCardStates: List<CardState<M>> = cardStates || List();
+    (positions: number[], newState: Partial<CardState<M>>) => {
+      if (cardStates === undefined) return;
+      let newCardStates: List<CardState<M>> = cardStates;
       positions.forEach(position => {
-        newCardStates = newCardStates.set(position, newState);
+        const currState = cardStates.get(position);
+        if (currState === undefined) return;
+        newCardStates = newCardStates.set(position, {
+          ...currState,
+          ...newState,
+        });
       });
       setCardStates(newCardStates);
     },
