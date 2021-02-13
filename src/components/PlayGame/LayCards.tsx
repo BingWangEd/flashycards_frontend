@@ -49,6 +49,7 @@ const LayCards: FunctionComponent = () => {
         position,
         player: playerName || '',
         roomCode: roomCode || '',
+        payload: null,
       });
 
       updateCardStates([position], {

@@ -10,7 +10,7 @@ import React, {
 import { useRoomState, RoomState, PlayerRole, Mode } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
-import { AllServerActionType, GameCardState, ICardAction, useGame, GameWordCard } from './GameContext';
+import { AllServerActionType, GameCardState, ICardAction, useGame, GameWordCard, ClientActionType } from './GameContext';
 import { IRule } from '../components/SetCardsLayout';
 
 // Events sent to websocket
@@ -44,7 +44,7 @@ interface IWebSocketContext {
   submitName: (playerName: string) => void;
   setWords: (words: Array<[string, string]>) => void;
   confirmCardsLayout: (layoutRules: IRule[], groupWordsBySet: boolean) => void;
-  sendAction: (action: ICardAction) => void;
+  sendAction: (action: ICardAction<ClientActionType>) => void;
 }
 
 export const WebSocketContext = createContext<IWebSocketContext>({
@@ -133,9 +133,6 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
             setRoomState(RoomState.PlayCardMatchGame);
             return;
           case Mode.Free:
-            console.log('shuffled cards: ', shuffledCards);
-            console.log('cardStates: ', cardStates);
-            console.log('actions: ', actions);
             startGame(List(shuffledCards), List(cardStates));
             setRoomState(RoomState.PlayFreeCard);
             return;
@@ -150,7 +147,6 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
     });
 
     socketIO?.on(WebSocketEmissionEvent.UpdateGameState, (actions: AllServerActionType<typeof mode>[]) => {
-      console.log('updateState actions: ', actions);
       implementCardActions(actions);
     });
 
@@ -219,8 +215,8 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
     [socketIO, roomCode],
   );
 
-  const sendAction = useCallback(
-    (action: ICardAction) => {
+  const sendAction = useCallback(<T extends ClientActionType>
+    (action: ICardAction<T>) => {
       if (!socketIO) return;
 
       socketIO.emit(WebSocketEvent.SendAction, action);

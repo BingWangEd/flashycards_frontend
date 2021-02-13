@@ -32,6 +32,7 @@ const DisplayCardCanvas: FunctionComponent = () => {
         position,
         player: playerName || '',
         roomCode: roomCode || '',
+        payload: null,
       });
 
       updateCardStates([position], newState);
@@ -60,7 +61,20 @@ const DisplayCardCanvas: FunctionComponent = () => {
         y: currY + (clientY - moveStartY),
       }
     });
-  }, [updateCardStates, cardStates]);
+
+    if (!roomCode) return;
+
+    sendAction({
+      type: ClientActionType.Drop,
+      position: cardIndex,
+      payload: {
+        x: currX + (clientX - moveStartX),
+        y: currY + (clientY - moveStartY),
+      },
+      roomCode,
+      player: playerName,
+    });
+  }, [updateCardStates, cardStates, sendAction]);
 
   return (
     <div

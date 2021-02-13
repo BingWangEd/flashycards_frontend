@@ -2,6 +2,9 @@ import React, { FunctionComponent, memo, useCallback, useEffect, useRef, useStat
 import { Content } from '../../components/SetCardsLayout';
 import BaseCard, { IProps as IBaseCardProps } from './BaseCard';
 import throttle from 'lodash/throttle';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import { ClientActionType } from '../../contexts/GameContext';
+import { useRoomState } from '../../contexts/RoomStateContext';
 
 export type Position = {
   x: number,
@@ -21,10 +24,13 @@ interface IFreeModeCard extends Pick<IBaseCardProps, 'id' | 'isActive' | 'getRef
 
 const CARD_WIDTH = 150;
 const CARD_HEIGHT = 150;
-const THROTTLED_MS = 500;
+const THROTTLED_MS = 100;
 
 const FreeModeCard: FunctionComponent<IFreeModeCard> = memo<IFreeModeCard>(
   ({ id, isActive, isFaceUp, content, faceDown, faceUp, onFlipCard, position, setMoveStartPosition, setMovingCardIndex }: IFreeModeCard) => {
+    const { sendAction } = useWebSocketContext();
+    const { roomCode, playerName } = useRoomState();
+
     const [word, translation] = content;
     const getNode = (side: Content) =>
       side === Content.Translation ? Word(translation) : side === Content.Word ? Word(word) : Word(undefined);
@@ -49,25 +55,32 @@ const FreeModeCard: FunctionComponent<IFreeModeCard> = memo<IFreeModeCard>(
       setMovingCardIndex();
     }, [setMoveStartPosition, setMovingCardIndex]);
 
-    const moveCard = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    // TODO: cancel throttle
+    const moveCard = useCallback(throttle((e: React.DragEvent<HTMLDivElement>) => {
       e.persist();
       e.preventDefault();
       
       // update server about moved distance:
       const {clientX, clientY} = e;
+      if (clientX === null || clientY=== null || !roomCode) return;
       const {x: prevX, y: prevY} = prevClientPosition.current;
-      console.log(`moved x: ${clientX-prevX}`);
-      console.log(`moved y: ${clientY-prevY}`);
+
+      sendAction({
+        type: ClientActionType.Move,
+        position: id,
+        payload: {
+          x: clientX-prevX,
+          y: clientY-prevY,
+        },
+        roomCode,
+        player: playerName,
+      });
+
       prevClientPosition.current = {
         x: clientX,
         y: clientY,
       };
-    }, []);
-
-    useEffect(() => {
-      console.log(`Card ${content} mounted`);
-      return () => console.log(`Card ${content} unmounting`);
-    }, [content]);
+    }, THROTTLED_MS), []);
 
     return (
       <div
