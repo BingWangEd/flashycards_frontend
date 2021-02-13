@@ -39,7 +39,7 @@ const DemoGameWords = [
   [CardColor.Yellow, `color: ${CardColor.Yellow}`],
 ];
 
-const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordNumber }) => {
+const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordNumber }: { allWordNumber: number }) => {
   const [wordSets, setWordSets] = useState<ICard[][]>([]);
   const [layoutRules, setLayoutRules] = useState<IRule[]>([]);
   const [groupWordsBySet, setGroupWordsBySet] = useState(false);

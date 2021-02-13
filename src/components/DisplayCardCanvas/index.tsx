@@ -40,49 +40,52 @@ const DisplayCardCanvas: FunctionComponent = () => {
     [updateCardStates, playerName, roomCode, sendAction],
   );
 
-  const dropCard = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    const {clientX, clientY} = e;
-    
-    if (movingCardIndex.current === undefined || moveStartPosition.current === undefined) return;
+  const dropCard = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      const { clientX, clientY } = e;
 
-    const cardIndex = movingCardIndex.current;
-    movingCardIndex.current = undefined;
+      if (movingCardIndex.current === undefined || moveStartPosition.current === undefined) return;
 
-    const { x: moveStartX, y: moveStartY } = moveStartPosition.current;
-    moveStartPosition.current = undefined;
+      const cardIndex = movingCardIndex.current;
+      movingCardIndex.current = undefined;
 
-    const currCardState = cardStates?.get(cardIndex);
-    if (!currCardState) return;
-    const { x: currX, y: currY } = currCardState.position;
+      const { x: moveStartX, y: moveStartY } = moveStartPosition.current;
+      moveStartPosition.current = undefined;
 
-    updateCardStates([cardIndex], {
-      position: {
-        x: currX + (clientX - moveStartX),
-        y: currY + (clientY - moveStartY),
-      }
-    });
+      const currCardState = cardStates?.get(cardIndex);
+      if (!currCardState) return;
+      const { x: currX, y: currY } = currCardState.position;
 
-    if (!roomCode) return;
+      updateCardStates([cardIndex], {
+        position: {
+          x: currX + (clientX - moveStartX),
+          y: currY + (clientY - moveStartY),
+        },
+      });
 
-    sendAction({
-      type: ClientActionType.Drop,
-      position: cardIndex,
-      payload: {
-        x: currX + (clientX - moveStartX),
-        y: currY + (clientY - moveStartY),
-      },
-      roomCode,
-      player: playerName,
-    });
-  }, [updateCardStates, cardStates, sendAction]);
+      if (!roomCode) return;
+
+      sendAction({
+        type: ClientActionType.Drop,
+        position: cardIndex,
+        payload: {
+          x: currX + (clientX - moveStartX),
+          y: currY + (clientY - moveStartY),
+        },
+        roomCode,
+        player: playerName,
+      });
+    },
+    [updateCardStates, cardStates, sendAction, playerName, roomCode],
+  );
 
   return (
     <div
       style={style.container}
       // It seems you have to cancel these default actions in order to drop an element.
       // See https://www.quirksmode.org/blog/archives/2009/09/the_html5_drag.html
-      onDragOver={(e) => e.preventDefault()}
-      onDragEnter={(e) => e.preventDefault()}
+      onDragOver={e => e.preventDefault()}
+      onDragEnter={e => e.preventDefault()}
       // For Chrome, same effect could be reached via the `onDragEng` attached to each card,
       // but for Safari and FireFox `clientX` and `clientY` are only defined in `onDrop`
       onDrop={dropCard}
@@ -91,12 +94,13 @@ const DisplayCardCanvas: FunctionComponent = () => {
         cardWords.map((word, index) => {
           const currentCardState: FreeCardState | undefined = cardStates?.get(index);
 
-          if (!currentCardState) return;
+          if (!currentCardState) return <div />;
           const { isFaceUp, isActive, position } = currentCardState;
           const { faceUp, faceDown, content } = word;
 
           return (
             <FreeModeCard
+              key={index}
               id={index}
               isActive={isActive}
               isFaceUp={isFaceUp}
@@ -105,12 +109,11 @@ const DisplayCardCanvas: FunctionComponent = () => {
               faceDown={faceDown}
               position={position}
               onFlipCard={() => flipCard(index, currentCardState)}
-              setMovingCardIndex={() => movingCardIndex.current = index}
-              setMoveStartPosition={(position: Position) => moveStartPosition.current = position}
+              setMovingCardIndex={() => (movingCardIndex.current = index)}
+              setMoveStartPosition={(position: Position) => (moveStartPosition.current = position)}
             />
-          )
-        })
-      }
+          );
+        })}
     </div>
   );
 };

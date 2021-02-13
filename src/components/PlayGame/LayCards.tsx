@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useCallback, useMemo } from 'react';
-import { ClientActionType, useGame } from '../../contexts/GameContext';
-import { useRoomState } from '../../contexts/RoomStateContext';
+import { ClientActionType, useGame, GameWordCard } from '../../contexts/GameContext';
+import { Mode, useRoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import Card from './Card';
 
@@ -15,7 +15,7 @@ const LayCards: FunctionComponent = () => {
     setWaitingForResponse,
     hasFlippedCard,
     setHasFlippedCard,
-  } = useGame();
+  } = useGame<Mode.Game>();
   const { sendAction } = useWebSocketContext();
 
   const style = {
@@ -73,9 +73,7 @@ const LayCards: FunctionComponent = () => {
         return (
           <Card
             key={index}
-            // @ts-ignore
             word={(word && word.word) || ''}
-            // @ts-ignore
             isOpen={cardStates?.get(index)?.isOpen || false}
             isActive={isActive}
             position={index}

@@ -1,4 +1,4 @@
-import React, { FunctionComponent, memo, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FunctionComponent, memo, useCallback, useRef } from 'react';
 import { Content } from '../../components/SetCardsLayout';
 import BaseCard, { IProps as IBaseCardProps } from './BaseCard';
 import throttle from 'lodash/throttle';
@@ -7,9 +7,9 @@ import { ClientActionType } from '../../contexts/GameContext';
 import { useRoomState } from '../../contexts/RoomStateContext';
 
 export type Position = {
-  x: number,
-  y: number,
-}
+  x: number;
+  y: number;
+};
 
 interface IFreeModeCard extends Pick<IBaseCardProps, 'id' | 'isActive' | 'getRef'> {
   isFaceUp: boolean;
@@ -26,22 +26,33 @@ const CARD_WIDTH = 150;
 const CARD_HEIGHT = 150;
 const THROTTLED_MS = 100;
 
-const FreeModeCard: FunctionComponent<IFreeModeCard> = memo<IFreeModeCard>(
-  ({ id, isActive, isFaceUp, content, faceDown, faceUp, onFlipCard, position, setMoveStartPosition, setMovingCardIndex }: IFreeModeCard) => {
-    const { sendAction } = useWebSocketContext();
-    const { roomCode, playerName } = useRoomState();
+const FreeModeCard: FunctionComponent<IFreeModeCard> = ({
+  id,
+  isActive,
+  isFaceUp,
+  content,
+  faceDown,
+  faceUp,
+  onFlipCard,
+  position,
+  setMoveStartPosition,
+  setMovingCardIndex,
+}: IFreeModeCard) => {
+  const { sendAction } = useWebSocketContext();
+  const { roomCode, playerName } = useRoomState();
 
-    const [word, translation] = content;
-    const getNode = (side: Content) =>
-      side === Content.Translation ? Word(translation) : side === Content.Word ? Word(word) : Word(undefined);
-    
-    const prevClientPosition = useRef(position);
+  const [word, translation] = content;
+  const getNode = (side: Content) =>
+    side === Content.Translation ? Word(translation) : side === Content.Word ? Word(word) : Word(undefined);
 
-    const startMoveCard = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-      e.dataTransfer.effectAllowed = "move";
+  const prevClientPosition = useRef(position);
 
-      const {clientX, clientY} = e;
-      
+  const startMoveCard = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.dataTransfer.effectAllowed = 'move';
+
+      const { clientX, clientY } = e;
+
       prevClientPosition.current = {
         x: clientX,
         y: clientY,
@@ -50,66 +61,71 @@ const FreeModeCard: FunctionComponent<IFreeModeCard> = memo<IFreeModeCard>(
       setMoveStartPosition({
         x: clientX,
         y: clientY,
-      })
-
-      setMovingCardIndex();
-    }, [setMoveStartPosition, setMovingCardIndex]);
-
-    // TODO: cancel throttle
-    const moveCard = useCallback(throttle((e: React.DragEvent<HTMLDivElement>) => {
-      e.persist();
-      e.preventDefault();
-      
-      // update server about moved distance:
-      const {clientX, clientY} = e;
-      if (clientX === null || clientY=== null || !roomCode) return;
-      const {x: prevX, y: prevY} = prevClientPosition.current;
-
-      sendAction({
-        type: ClientActionType.Move,
-        position: id,
-        payload: {
-          x: clientX-prevX,
-          y: clientY-prevY,
-        },
-        roomCode,
-        player: playerName,
       });
 
-      prevClientPosition.current = {
-        x: clientX,
-        y: clientY,
-      };
-    }, THROTTLED_MS), []);
+      setMovingCardIndex();
+    },
+    [setMoveStartPosition, setMovingCardIndex],
+  );
 
-    return (
-      <div
-        key={id}
-        style={{
-          position: 'absolute',
-          left: `${position.x}px`,
-          top: `${position.y}px`,
+  // TODO: cancel throttle
+  const moveCard = useCallback(
+    () =>
+      throttle((e: React.DragEvent<HTMLDivElement>) => {
+        e.persist();
+        e.preventDefault();
+
+        // update server about moved distance:
+        const { clientX, clientY } = e;
+        if (clientX === null || clientY === null || !roomCode) return;
+        const { x: prevX, y: prevY } = prevClientPosition.current;
+
+        sendAction({
+          type: ClientActionType.Move,
+          position: id,
+          payload: {
+            x: clientX - prevX,
+            y: clientY - prevY,
+          },
+          roomCode,
+          player: playerName,
+        });
+
+        prevClientPosition.current = {
+          x: clientX,
+          y: clientY,
+        };
+      }, THROTTLED_MS),
+    [id, playerName, roomCode, sendAction],
+  );
+
+  return (
+    <div
+      key={id}
+      style={{
+        position: 'absolute',
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+      }}
+    >
+      <BaseCard
+        id={id}
+        faceUp={getNode(faceUp)}
+        faceDown={getNode(faceDown)}
+        cardStyle={{
+          width: `${CARD_WIDTH}px`,
+          height: `${CARD_HEIGHT}px`,
         }}
-      >
-        <BaseCard
-          id={id}
-          faceUp={getNode(faceUp)}
-          faceDown={getNode(faceDown)}
-          cardStyle={{
-            width: `${CARD_WIDTH}px`,
-            height: `${CARD_HEIGHT}px`,
-          }}
-          isFaceUp={isFaceUp}
-          isActive={isActive}
-          flipCard={onFlipCard}
-          startMoveCard={startMoveCard}
-          moveCard={moveCard}
-          draggable
-        />
-      </div>
-    );
-  },
-);
+        isFaceUp={isFaceUp}
+        isActive={isActive}
+        flipCard={onFlipCard}
+        startMoveCard={startMoveCard}
+        moveCard={moveCard}
+        draggable
+      />
+    </div>
+  );
+};
 
 const Word = (word: string | undefined) => {
   return (
@@ -123,4 +139,4 @@ const Word = (word: string | undefined) => {
   );
 };
 
-export default FreeModeCard;
+export default memo<IFreeModeCard>(FreeModeCard);

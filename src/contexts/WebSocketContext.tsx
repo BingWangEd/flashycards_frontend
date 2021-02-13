@@ -10,7 +10,14 @@ import React, {
 import { useRoomState, RoomState, PlayerRole, Mode } from './RoomStateContext';
 import io from 'socket.io-client';
 import { List } from 'immutable';
-import { AllServerActionType, GameCardState, ICardAction, useGame, GameWordCard, ClientActionType } from './GameContext';
+import {
+  AllServerActionType,
+  GameCardState,
+  ICardAction,
+  useGame,
+  GameWordCard,
+  ClientActionType,
+} from './GameContext';
 import { IRule } from '../components/SetCardsLayout';
 
 // Events sent to websocket
@@ -215,8 +222,8 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
     [socketIO, roomCode],
   );
 
-  const sendAction = useCallback(<T extends ClientActionType>
-    (action: ICardAction<T>) => {
+  const sendAction = useCallback(
+    <T extends ClientActionType>(action: ICardAction<T>) => {
       if (!socketIO) return;
 
       socketIO.emit(WebSocketEvent.SendAction, action);

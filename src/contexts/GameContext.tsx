@@ -97,17 +97,15 @@ interface IMember {
 }
 
 type MovedDimensions = {
-  x: number,
-  y: number,
-}
+  x: number;
+  y: number;
+};
 
 export interface ICardAction<T extends ClientActionType> {
   type: T;
   position: number;
   player?: string;
-  payload: T extends ClientActionType.Move ? MovedDimensions : (
-    T extends ClientActionType.Drop ? Position : null
-  ); 
+  payload: T extends ClientActionType.Move ? MovedDimensions : T extends ClientActionType.Drop ? Position : null;
   roomCode: string;
 }
 
@@ -252,10 +250,10 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = <
       value={{
         cardWords,
         cardStates,
-        // @ts-ignore
+        //@ts-ignore
         updateCardStates,
         implementCardActions,
-        // @ts-ignore
+        //@ts-ignore
         startGame,
         currentPlayer,
         scores,
