@@ -37,6 +37,8 @@ enum WebSocketEmissionEvent {
   ConfirmRoom = 'confirmed room exists',
   RejectRoom = 'rejected room exists',
   JoinRoom = 'joined room',
+  ChangeName = 'need to change name',
+  MismatchGameMode = 'mismatched game mode',
   CreateNewRoom = 'created new room',
   ReadyToSetLayout = 'ready to set layout',
   StartGame = 'started game',
@@ -108,6 +110,7 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
 
     socketIO?.on(WebSocketEmissionEvent.RejectRoom, ({ roomCode }: { roomCode: string }) => {
       alert(`${roomCode} does not exist or game already started in the room`);
+      setRoomState(RoomState.GetGameRoom);
     });
 
     socketIO?.on(WebSocketEmissionEvent.CreateNewRoom, ({ roomCode }: { roomCode: string }) => {
@@ -150,7 +153,9 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
     );
 
     socketIO?.on(WebSocketEmissionEvent.ReadyToSetLayout, () => {
-      setRoomState(RoomState.SetCardsLayout);
+      if (playerRole === PlayerRole.Teacher) {
+        setRoomState(RoomState.SetCardsLayout);
+      }
     });
 
     socketIO?.on(WebSocketEmissionEvent.UpdateGameState, (actions: AllServerActionType<typeof mode>[]) => {
@@ -166,6 +171,22 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
       },
     );
 
+    socketIO?.on(
+      WebSocketEmissionEvent.ChangeName,
+      ({ playerName }: { playerName: string }) => {
+        alert(`The name: ${playerName} already exists. Please pick a different name`);
+        setRoomState(RoomState.SetPlayerName);
+      },
+    );
+
+    socketIO?.on(
+      WebSocketEmissionEvent.MismatchGameMode,
+      ({ roomCode, gameMode }: {roomCode: string, gameMode: string}) => {
+        alert(`The chosen game mode: ${gameMode} does not match with room: ${roomCode}'s game mode. Please choose the other one.`);
+        setRoomState(RoomState.GetGameRoom);
+      },
+    );
+
     return () => {
       socketIO?.off(WebSocketEmissionEvent.GetNewMember);
       socketIO?.off(WebSocketEmissionEvent.ConfirmRoom);
@@ -175,8 +196,9 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
       socketIO?.off(WebSocketEmissionEvent.ReadyToSetLayout);
       socketIO?.off(WebSocketEmissionEvent.UpdateGameState);
       socketIO?.off(WebSocketEmissionEvent.LeftRoom);
+      socketIO?.off(WebSocketEmissionEvent.ChangeName);
     };
-  }, [socketIO, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame, mode]);
+  }, [socketIO, setRoomState, setPlayerName, setRoomCode, implementCardActions, startGame, mode, playerRole]);
 
   const submitName = useCallback(
     (playerName: string) => {
@@ -187,15 +209,14 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
 
   const enterRoom = useCallback(
     async (roomCode: string) => {
-      // TODO: catch error when webSocket connection is not created
-      const role = playerRole ? playerRole : PlayerRole.Student;
-      if (socketIO) {
-        socketIO.emit(WebSocketEvent.EnterRoom, { roomCode });
+      if (socketIO) { // TODO: catch error when webSocket connection is not created
+        socketIO.emit(WebSocketEvent.EnterRoom, { roomCode, gameMode: mode });
       } else {
         const socket = await connectToWebSocket();
-        socket.emit(WebSocketEvent.EnterRoom, { roomCode });
+        socket.emit(WebSocketEvent.EnterRoom, { roomCode, gameMode: mode });
       }
       if (!playerRole) {
+        const role = playerRole ? playerRole : PlayerRole.Student;
         setPlayerRole && setPlayerRole(role);
       }
     },
