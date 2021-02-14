@@ -10,6 +10,7 @@ export interface IProps {
   flipCard: () => void;
   moveCard?: (e: React.DragEvent<HTMLDivElement>) => void;
   startMoveCard?: (e: React.DragEvent<HTMLDivElement>) => void;
+  stopMoveCard?: () => void;
   draggable?: boolean;
   cardStyle?: React.CSSProperties;
   getRef?: CallbackRef;
@@ -24,6 +25,7 @@ const BaseCard: FunctionComponent<IProps> = ({
   flipCard,
   moveCard,
   startMoveCard,
+  stopMoveCard,
   draggable = false,
   cardStyle = {
     width: '150px',
@@ -77,7 +79,7 @@ const BaseCard: FunctionComponent<IProps> = ({
 
   return (
     <div
-      draggable
+      draggable={draggable}
       style={{
         ...style.flipContainer,
         ...style.card,
@@ -86,6 +88,7 @@ const BaseCard: FunctionComponent<IProps> = ({
       onClick={handleClick}
       onDragStart={startMoveCard}
       onDrag={moveCard}
+      onDragEnd={stopMoveCard}
       ref={getRef}
     >
       <div

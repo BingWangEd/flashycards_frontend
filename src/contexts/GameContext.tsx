@@ -20,10 +20,15 @@ export interface GameWordCard {
   counterpart: string;
 }
 
+export enum ZindexLayer {
+  Normal = 0,
+  Upper = 10,
+}
+
 export interface FreeCardState {
-  //id: number;
   isFaceUp: boolean;
   isActive: boolean;
+  zIndex: ZindexLayer;
   position: {
     x: number;
     y: number;

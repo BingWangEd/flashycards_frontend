@@ -1,9 +1,9 @@
-import React, { FunctionComponent, memo, useCallback, useRef } from 'react';
+import React, { FunctionComponent, memo, useCallback, useRef, useState } from 'react';
 import { Content } from '../../components/SetCardsLayout';
 import BaseCard, { IProps as IBaseCardProps } from './BaseCard';
 import throttle from 'lodash/throttle';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import { ClientActionType } from '../../contexts/GameContext';
+import { ClientActionType, ZindexLayer } from '../../contexts/GameContext';
 import { useRoomState } from '../../contexts/RoomStateContext';
 
 export type Position = {
@@ -17,6 +17,7 @@ interface IFreeModeCard extends Pick<IBaseCardProps, 'id' | 'isActive' | 'getRef
   faceUp: Content;
   faceDown: Content;
   position: Position;
+  zIndex: ZindexLayer;
   onFlipCard: () => void;
   setMovingCardIndex: () => void;
   setMoveStartPosition: (position: Position) => void;
@@ -34,6 +35,7 @@ const FreeModeCard: FunctionComponent<IFreeModeCard> = ({
   faceDown,
   faceUp,
   onFlipCard,
+  zIndex,
   position,
   setMoveStartPosition,
   setMovingCardIndex,
@@ -115,6 +117,7 @@ const FreeModeCard: FunctionComponent<IFreeModeCard> = ({
         cardStyle={{
           width: `${CARD_WIDTH}px`,
           height: `${CARD_HEIGHT}px`,
+          zIndex: zIndex,
         }}
         isFaceUp={isFaceUp}
         isActive={isActive}

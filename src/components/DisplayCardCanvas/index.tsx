@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useRef } from 'react';
-import { ClientActionType, FreeCardState, useGame } from '../../contexts/GameContext';
+import { ClientActionType, FreeCardState, useGame, ZindexLayer } from '../../contexts/GameContext';
 import { Mode, useRoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import FreeModeCard, { Position } from '../../uiUnits/card/FreeModeCard';
@@ -57,6 +57,7 @@ const DisplayCardCanvas: FunctionComponent = () => {
       const { x: currX, y: currY } = currCardState.position;
 
       updateCardStates([cardIndex], {
+        zIndex: ZindexLayer.Upper,
         position: {
           x: currX + (clientX - moveStartX),
           y: currY + (clientY - moveStartY),
@@ -95,7 +96,7 @@ const DisplayCardCanvas: FunctionComponent = () => {
           const currentCardState: FreeCardState | undefined = cardStates?.get(index);
 
           if (!currentCardState) return <div />;
-          const { isFaceUp, isActive, position } = currentCardState;
+          const { isFaceUp, isActive, position, zIndex } = currentCardState;
           const { faceUp, faceDown, content } = word;
 
           return (
@@ -108,6 +109,7 @@ const DisplayCardCanvas: FunctionComponent = () => {
               faceUp={faceUp}
               faceDown={faceDown}
               position={position}
+              zIndex={zIndex}
               onFlipCard={() => flipCard(index, currentCardState)}
               setMovingCardIndex={() => (movingCardIndex.current = index)}
               setMoveStartPosition={(position: Position) => (moveStartPosition.current = position)}
