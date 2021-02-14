@@ -1,15 +1,15 @@
 import React, { FunctionComponent } from 'react';
 import styled, { keyframes } from 'styled-components';
 
-const Loading: FunctionComponent = () => {
-  const AnimatedLoadingComponent = styled.div`
-    animation: ${keyframes({
-        '0%': { width: '0%' },
-        '100%': { width: '100%' },
-      })}
-      1.5s infinite;
-  `;
+const AnimatedLoadingComponent = styled.div`
+  animation: ${keyframes({
+      '0%': { width: '0%' },
+      '100%': { width: '100%' },
+    })}
+    1.5s infinite;
+`;
 
+const Loading: FunctionComponent = () => {
   const style = {
     word: {
       color: '#818181',

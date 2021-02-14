@@ -87,11 +87,12 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
           height: (wordNumber / setPerRow) * (cardHeight + MARGIN_PX),
         }}
       >
-        {wordSets.map((wordSet, i) =>
-          wordSet.map((word, y) => {
+        {wordSets.map((wordSet, i) => {
+          const wordNumberPerSet = wordSet.length;
+          return wordSet.map((word, y) => {
             return (
               <div
-                key={i}
+                key={i*wordNumberPerSet+y}
                 style={{
                   position: 'absolute',
                   left: `${cardSetPositions[i][y].x}px`,
@@ -106,9 +107,9 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
                 />
               </div>
             );
-          }),
+          })},
         )}
-      </div>
+        </div>
     </div>
   );
 };

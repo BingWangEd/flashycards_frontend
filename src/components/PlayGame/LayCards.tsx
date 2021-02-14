@@ -1,8 +1,8 @@
 import React, { FunctionComponent, useCallback, useMemo } from 'react';
-import { ClientActionType, useGame, GameWordCard } from '../../contexts/GameContext';
+import { ClientActionType, useGame } from '../../contexts/GameContext';
 import { Mode, useRoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import Card from './Card';
+import MatchGameCard from '../../uiUnits/card/MatchGameCard';
 
 const LayCards: FunctionComponent = () => {
   const { playerName, roomCode } = useRoomState();
@@ -71,7 +71,7 @@ const LayCards: FunctionComponent = () => {
         const isActive = cardStates?.get(index)?.isActive || false;
 
         return (
-          <Card
+          <MatchGameCard
             key={index}
             word={(word && word.word) || ''}
             isOpen={cardStates?.get(index)?.isOpen || false}
