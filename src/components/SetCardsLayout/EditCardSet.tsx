@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useState } from 'react';
-import { Content, SettingType } from '.';
+import { Content, DEFAULT_RULES, SettingType } from '.';
 import CircleButton from '../../uiUnits/buttons/CircleButton';
 import Dropdown from '../../uiUnits/dropdowns/Dropdown';
 
@@ -16,9 +16,9 @@ const EditCardSet: FunctionComponent<IEditCardSet> = ({
   cardSetAdded,
   updateLayoutRules,
 }: IEditCardSet) => {
-  const [faceUpOption, setFaceUpOption] = useState<string>(Content.Word);
-  const [faceDownOption, setFaceDownOption] = useState<string>(Content.Translation);
-  const [isRandomized, setIsRandomized] = useState<boolean>(false);
+  const [faceUpOption, setFaceUpOption] = useState<string>(DEFAULT_RULES.faceUp);
+  const [faceDownOption, setFaceDownOption] = useState<string>(DEFAULT_RULES.faceDown);
+  const [isRandomized, setIsRandomized] = useState<boolean>(DEFAULT_RULES.isRandomized);
 
   const style = {
     container: {

@@ -1,7 +1,6 @@
 import React, { FunctionComponent, memo, useCallback, useRef } from 'react';
 import { Content } from '../../components/SetCardsLayout';
 import BaseCard, { IProps as IBaseCardProps } from './BaseCard';
-import throttle from 'lodash/throttle';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import { ClientActionType, ZindexLayer } from '../../contexts/GameContext';
 import { useRoomState } from '../../contexts/RoomStateContext';
@@ -25,7 +24,6 @@ interface IFreeModeCard extends Pick<IBaseCardProps, 'id' | 'isActive' | 'getRef
 
 const CARD_WIDTH = 150;
 const CARD_HEIGHT = 150;
-const THROTTLED_MS = 100;
 
 const FreeModeCard: FunctionComponent<IFreeModeCard> = ({
   id,
@@ -72,32 +70,31 @@ const FreeModeCard: FunctionComponent<IFreeModeCard> = ({
 
   // TODO: cancel throttle
   const moveCard = useCallback(
-    () =>
-      throttle((e: React.DragEvent<HTMLDivElement>) => {
-        e.persist();
-        e.preventDefault();
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.persist();
+      e.preventDefault();
 
-        // update server about moved distance:
-        const { clientX, clientY } = e;
-        if (clientX === null || clientY === null || !roomCode) return;
-        const { x: prevX, y: prevY } = prevClientPosition.current;
+      // update server about moved distance:
+      const { clientX, clientY } = e;
+      if (clientX === null || clientY === null || !roomCode) return;
+      const { x: prevX, y: prevY } = prevClientPosition.current;
 
-        sendAction({
-          type: ClientActionType.Move,
-          position: id,
-          payload: {
-            x: clientX - prevX,
-            y: clientY - prevY,
-          },
-          roomCode,
-          player: playerName,
-        });
+      sendAction({
+        type: ClientActionType.Move,
+        position: id,
+        payload: {
+          x: clientX - prevX,
+          y: clientY - prevY,
+        },
+        roomCode,
+        player: playerName,
+      });
 
-        prevClientPosition.current = {
-          x: clientX,
-          y: clientY,
-        };
-      }, THROTTLED_MS),
+      prevClientPosition.current = {
+        x: clientX,
+        y: clientY,
+      };
+    },
     [id, playerName, roomCode, sendAction],
   );
 

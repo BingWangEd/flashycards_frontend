@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import BaseButton, { IProps as IButtonProps } from './BaseButton';
 
 const SquareButton: FunctionComponent<IButtonProps & { color?: string; backgroundColor?: string }> = (
-  props: IButtonProps & { color?: string; backgroundColor?: string },
+  { color, backgroundColor, ...props }: IButtonProps & { color?: string; backgroundColor?: string },
 ) => {
   const style = {
     button: {
@@ -10,8 +10,8 @@ const SquareButton: FunctionComponent<IButtonProps & { color?: string; backgroun
       width: '100%',
       padding: '1.5em auto',
       margin: '1em auto',
-      backgroundColor: props.backgroundColor ? props.backgroundColor : 'white',
-      color: props.color ? props.color : 'black',
+      backgroundColor: backgroundColor ? backgroundColor : 'white',
+      color: color ? color : 'black',
       border: '1px solid #ccc',
     },
   };

@@ -98,7 +98,7 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
           marginTop: '50px',
           marginBottom: '100px',
           left: '50%',
-          transform: 'translateX(-60%)',
+          transform: 'translateX(-50%)',
           width: setPerRow * wordSets.size * (cardWidth + MARGIN_PX) + (setPerRow - 1) * SET_SPACE_PX,
           height: (wordNumber / setPerRow) * (cardHeight + MARGIN_PX),
         }}

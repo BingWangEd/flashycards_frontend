@@ -1,5 +1,6 @@
 import { List } from 'immutable';
 import React, { FunctionComponent, useCallback, useState } from 'react';
+import { useRoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import SquareButton from '../../uiUnits/buttons/SquareButton';
 import { CardColor } from '../../uiUnits/card/DemoCard';
@@ -30,6 +31,12 @@ export enum Content {
   Word = 'word',
   Translation = 'translation',
   None = 'none',
+}
+
+export const DEFAULT_RULES: IRule = {
+  faceUp: Content.Word,
+  faceDown: Content.Translation,
+  isRandomized: false,
 }
 
 const defaultSetting: SettingType = {
@@ -76,10 +83,11 @@ const createDefaultWordSets = (wordPool: [string, string][], setNumber: number):
 };
 
 const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordNumber }: { allWordNumber: number }) => {
+  const { roomCode } = useRoomState();
   const [wordSets, setWordSets] = useState<List<ICard[] | undefined>>(() =>
     createDefaultWordSets(DemoGameWords, SET_NUMBER),
   );
-  const [layoutRules, setLayoutRules] = useState<List<IRule>>(List());
+  const [layoutRules, setLayoutRules] = useState<List<IRule | undefined>>(List([DEFAULT_RULES, undefined]));
   const [groupWordsBySet, setGroupWordsBySet] = useState(false);
   const { confirmCardsLayout } = useWebSocketContext();
 
@@ -101,12 +109,14 @@ const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordN
   const removeSet = useCallback(
     (index: number) => {
       setWordSets(wordSets.set(index, undefined));
+      setLayoutRules(layoutRules.set(index, undefined));
     },
     [setWordSets, wordSets],
   );
 
   return (
     <div>
+      <h2>You are in Room 🗝: {roomCode}</h2>
       <div
         style={{
           display: 'flex',
@@ -159,7 +169,7 @@ const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordN
           color={'white'}
           backgroundColor={'red'}
           onClick={() => {
-            confirmCardsLayout(layoutRules, groupWordsBySet);
+            confirmCardsLayout(layoutRules.filter((rule) => rule !== undefined) as List<IRule>, groupWordsBySet);
           }}
         />
       </div>
