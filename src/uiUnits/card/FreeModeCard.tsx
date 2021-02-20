@@ -1,4 +1,4 @@
-import React, { FunctionComponent, memo, useCallback, useRef, useState } from 'react';
+import React, { FunctionComponent, memo, useCallback, useRef } from 'react';
 import { Content } from '../../components/SetCardsLayout';
 import BaseCard, { IProps as IBaseCardProps } from './BaseCard';
 import throttle from 'lodash/throttle';

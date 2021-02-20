@@ -63,7 +63,7 @@ const MatchGameCard: FunctionComponent<IProps> = ({ word, position, isActive, is
   );
 
   return (
-    <div style={{position: 'relative'}}>
+    <div style={{ position: 'relative' }}>
       {animation}
       <BaseCard
         id={position}
@@ -77,10 +77,8 @@ const MatchGameCard: FunctionComponent<IProps> = ({ word, position, isActive, is
       />
     </div>
   );
-}
+};
 
-const CardFace = (content: string, style: React.CSSProperties) => 
-  <h2 style={style}>{content}</h2>
-
+const CardFace = (content: string, style: React.CSSProperties) => <h2 style={style}>{content}</h2>;
 
 export default memo<IProps>(MatchGameCard);

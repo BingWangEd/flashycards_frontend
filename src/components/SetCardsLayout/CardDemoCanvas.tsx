@@ -1,3 +1,4 @@
+import { List } from 'immutable';
 import React, { FunctionComponent } from 'react';
 import { ICard } from '.';
 import DemoCard, { CardColor } from '../../uiUnits/card/DemoCard';
@@ -19,7 +20,7 @@ export enum CardCanvasVariant {
 }
 
 interface IProps {
-  wordSets: ICard[][];
+  wordSets: List<ICard[]>;
   variant?: CardCanvasVariant;
   groupWordsBySet: boolean;
   cardSize: ICardSize;
@@ -34,37 +35,41 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
   groupWordsBySet,
   cardSize,
 }: IProps) => {
-  const wordNumber = (wordSets[0] && wordSets[0].length) || 0;
+  const wordNumber = wordSets.get(0)?.length || 0;
   const { width: cardWidth, height: cardHeight } = cardSize;
 
   // When there's only one set of words, double the word count per row
-  const setPerRow: number = wordSets.length === 1 ? variant * 2 : variant;
+  const setPerRow: number = wordSets.size === 1 ? variant * 2 : variant;
 
   const cardSetPositions: ICardPosition[][] = [];
   // There's only one set of cards
-  if (wordSets.length === 1) {
-    cardSetPositions[0] = wordSets[0].map((card, index) => {
+  if (wordSets.size === 1) {
+    const newCardSet = wordSets.get(0)?.map((card, index) => {
       return {
         x: (index % setPerRow) * (cardWidth + MARGIN_PX),
         y: Math.floor(index / setPerRow) * (cardHeight + MARGIN_PX),
       };
     });
+
+    if (newCardSet) {
+      cardSetPositions[0] = newCardSet;
+    }
   }
 
-  if (wordSets.length === 2) {
+  if (wordSets.size === 2) {
     if (groupWordsBySet) {
       wordSets.forEach((wordSet, index) => {
         cardSetPositions[index] = wordSet.map((word, i) => {
           return {
             x:
-              index * (wordSets.length * (cardWidth + MARGIN_PX) + SET_SPACE_PX) +
+              index * (wordSets.size * (cardWidth + MARGIN_PX) + SET_SPACE_PX) +
               (i % variant) * (cardWidth + MARGIN_PX),
             y: Math.floor(i / setPerRow) * (cardHeight + MARGIN_PX),
           };
         });
       });
     } else {
-      const columnWidth = wordSets.length * (cardWidth + MARGIN_PX) + SET_SPACE_PX;
+      const columnWidth = wordSets.size * (cardWidth + MARGIN_PX) + SET_SPACE_PX;
       wordSets.forEach((wordSet, index) => {
         cardSetPositions[index] = wordSet.map((word, i) => {
           return {
@@ -77,13 +82,24 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
   }
 
   return (
-    <div>
-      <h2>{wordSets.length === 0 ? 'Add a word set by clicking the ➕ sign' : 'See Example Below:'}</h2>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignContent: 'center',
+        flexDirection: 'column',
+        width: '100%',
+      }}
+    >
+      <h2>{wordSets.size === 0 ? 'Add a word set by clicking the ➕ sign' : 'See Example Below:'}</h2>
       <div
         style={{
           position: 'relative',
-          margin: '50px',
-          width: setPerRow * wordSets.length * (cardWidth + MARGIN_PX) + (setPerRow - 1) * SET_SPACE_PX,
+          marginTop: '50px',
+          marginBottom: '100px',
+          left: '50%',
+          transform: 'translateX(-60%)',
+          width: setPerRow * wordSets.size * (cardWidth + MARGIN_PX) + (setPerRow - 1) * SET_SPACE_PX,
           height: (wordNumber / setPerRow) * (cardHeight + MARGIN_PX),
         }}
       >
@@ -92,7 +108,7 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
           return wordSet.map((word, y) => {
             return (
               <div
-                key={i*wordNumberPerSet+y}
+                key={i * wordNumberPerSet + y}
                 style={{
                   position: 'absolute',
                   left: `${cardSetPositions[i][y].x}px`,
@@ -107,9 +123,9 @@ const CardDemoCanvas: FunctionComponent<IProps> = ({
                 />
               </div>
             );
-          })},
-        )}
-        </div>
+          });
+        })}
+      </div>
     </div>
   );
 };

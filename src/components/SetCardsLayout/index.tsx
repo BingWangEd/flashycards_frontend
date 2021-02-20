@@ -1,10 +1,11 @@
+import { List } from 'immutable';
 import React, { FunctionComponent, useCallback, useState } from 'react';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import SquareButton from '../../uiUnits/buttons/SquareButton';
 import { CardColor } from '../../uiUnits/card/DemoCard';
 import { shuffle } from '../../utils/utils';
-import AddCardSet from './AddCardSet';
 import CardDemoCanvas from './CardDemoCanvas';
+import EditCardSet from './EditCardSet';
 
 export enum CardsLayoutSettingPhase {
   Content, // what does the each side of the card has
@@ -14,40 +15,77 @@ export enum CardsLayoutSettingPhase {
   Grouping, // only if the users choose translation and words being separated
 }
 
-export enum Content {
-  Word = 'word',
-  Translation = 'translation',
-  None = 'none',
-}
-
-export type ICard = {
-  id: number;
-  faceUp: Content;
-  faceDown: Content;
-  isFaceUp: boolean;
-  content: [string, string]; // [word, translation]
-};
-
 export type IRule = Pick<ICard, 'faceUp' | 'faceDown'> & {
   isRandomized: boolean;
 };
 
-const DemoGameWords = [
+const DemoGameWords: [string, string][] = [
   [CardColor.Red, `color: ${CardColor.Red}`],
   [CardColor.Green, `color: ${CardColor.Green}`],
   [CardColor.Blue, `color: ${CardColor.Blue}`],
   [CardColor.Yellow, `color: ${CardColor.Yellow}`],
 ];
 
+export enum Content {
+  Word = 'word',
+  Translation = 'translation',
+  None = 'none',
+}
+
+const defaultSetting: SettingType = {
+  faceUpOption: Content.Word,
+  faceDownOption: Content.Translation,
+  isRandomized: false,
+};
+
+export type ICard = {
+  id: number;
+  faceUp: Content;
+  faceDown: Content;
+  isFaceUp: boolean;
+  content: [string, string];
+};
+
+export type SettingType = {
+  faceUpOption: Content;
+  faceDownOption: Content;
+  isRandomized: boolean;
+};
+
+const SET_NUMBER = 2;
+
+const createDefaultWordSets = (wordPool: [string, string][], setNumber: number): List<ICard[] | undefined> => {
+  const newWordSets: (ICard[] | undefined)[] = [];
+  Array(setNumber)
+    .fill(0)
+    .forEach((value, index) => {
+      if (index === 0) {
+        const newWordCards: ICard[] = wordPool.map(([word, translation], index) => ({
+          id: index,
+          faceUp: defaultSetting.faceUpOption,
+          faceDown: defaultSetting.faceDownOption,
+          isFaceUp: true,
+          content: [word, translation],
+        }));
+        newWordSets[index] = newWordCards;
+      } else {
+        newWordSets[index] = undefined;
+      }
+    });
+  return List(newWordSets);
+};
+
 const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordNumber }: { allWordNumber: number }) => {
-  const [wordSets, setWordSets] = useState<ICard[][]>([]);
-  const [layoutRules, setLayoutRules] = useState<IRule[]>([]);
+  const [wordSets, setWordSets] = useState<List<ICard[] | undefined>>(() =>
+    createDefaultWordSets(DemoGameWords, SET_NUMBER),
+  );
+  const [layoutRules, setLayoutRules] = useState<List<IRule>>(List());
   const [groupWordsBySet, setGroupWordsBySet] = useState(false);
   const { confirmCardsLayout } = useWebSocketContext();
 
-  const add = useCallback(
-    (faceUpOption: Content, faceDownOption: Content, isRandomized: string) => {
-      const wordCards: ICard[] = DemoGameWords.map(([word, translation], index) => ({
+  const updateSet = useCallback(
+    (index: number, { faceUpOption, faceDownOption, isRandomized }: SettingType) => {
+      const newWordCards: ICard[] = DemoGameWords.map(([word, translation], index) => ({
         id: index,
         faceUp: faceUpOption,
         faceDown: faceDownOption,
@@ -55,30 +93,54 @@ const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordN
         content: [word, translation],
       }));
 
-      if (isRandomized === 'yes') {
-        setWordSets(wordSets.concat([shuffle(wordCards, 1)]));
-      } else {
-        setWordSets(wordSets.concat([wordCards]));
-      }
-
-      setLayoutRules(prevRules => {
-        return prevRules.concat([
-          {
-            faceUp: faceUpOption,
-            faceDown: faceDownOption,
-            isRandomized: isRandomized === 'yes' ? true : false,
-          },
-        ]);
-      });
+      setWordSets(isRandomized ? wordSets.set(index, shuffle(newWordCards, 1)) : wordSets.set(index, newWordCards));
     },
-    [wordSets, setWordSets],
+    [setWordSets, wordSets],
+  );
+
+  const removeSet = useCallback(
+    (index: number) => {
+      setWordSets(wordSets.set(index, undefined));
+    },
+    [setWordSets, wordSets],
   );
 
   return (
     <div>
-      {wordSets.length <= 1 && <AddCardSet add={add} />}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+        }}
+      >
+        {wordSets.map((wordSet, index) => {
+          return (
+            <EditCardSet
+              key={index}
+              update={(props: SettingType) => {
+                updateSet(index, props);
+              }}
+              remove={() => removeSet(index)}
+              updateLayoutRules={({ faceUpOption, faceDownOption, isRandomized }: SettingType) => {
+                setLayoutRules(
+                  layoutRules.set(index, {
+                    faceUp: faceUpOption,
+                    faceDown: faceDownOption,
+                    isRandomized,
+                  }),
+                );
+              }}
+              cardSetAdded={wordSet === undefined ? false : true}
+            />
+          );
+        })}
+      </div>
       <CardDemoCanvas
-        wordSets={wordSets}
+        wordSets={
+          wordSets.filter(set => {
+            return set !== undefined;
+          }) as List<ICard[]>
+        }
         groupWordsBySet={groupWordsBySet}
         cardSize={{
           width: 75,
@@ -93,15 +155,9 @@ const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordN
           }}
         />
         <SquareButton
-          label={'Clear all sets'}
-          onClick={() => {
-            setWordSets([]);
-            setLayoutRules([]);
-          }}
-        />
-        <SquareButton
           label={'Confirm Layout'}
-          color={'red'}
+          color={'white'}
+          backgroundColor={'red'}
           onClick={() => {
             confirmCardsLayout(layoutRules, groupWordsBySet);
           }}

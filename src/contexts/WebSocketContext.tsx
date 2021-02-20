@@ -52,7 +52,7 @@ interface IWebSocketContext {
   createRoom: () => void;
   submitName: (playerName: string) => void;
   setWords: (words: Array<[string, string]>) => void;
-  confirmCardsLayout: (layoutRules: IRule[], groupWordsBySet: boolean) => void;
+  confirmCardsLayout: (layoutRules: List<IRule>, groupWordsBySet: boolean) => void;
   sendAction: (action: ICardAction<ClientActionType>) => void;
 }
 
@@ -171,18 +171,17 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
       },
     );
 
-    socketIO?.on(
-      WebSocketEmissionEvent.ChangeName,
-      ({ playerName }: { playerName: string }) => {
-        alert(`The name: ${playerName} already exists. Please pick a different name`);
-        setRoomState(RoomState.SetPlayerName);
-      },
-    );
+    socketIO?.on(WebSocketEmissionEvent.ChangeName, ({ playerName }: { playerName: string }) => {
+      alert(`The name: ${playerName} already exists. Please pick a different name`);
+      setRoomState(RoomState.SetPlayerName);
+    });
 
     socketIO?.on(
       WebSocketEmissionEvent.MismatchGameMode,
-      ({ roomCode, gameMode }: {roomCode: string, gameMode: string}) => {
-        alert(`The chosen game mode: ${gameMode} does not match with room: ${roomCode}'s game mode. Please choose the other one.`);
+      ({ roomCode, gameMode }: { roomCode: string; gameMode: string }) => {
+        alert(
+          `The chosen game mode: ${gameMode} does not match with room: ${roomCode}'s game mode. Please choose the other one.`,
+        );
         setRoomState(RoomState.GetGameRoom);
       },
     );
@@ -209,7 +208,8 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
 
   const enterRoom = useCallback(
     async (roomCode: string) => {
-      if (socketIO) { // TODO: catch error when webSocket connection is not created
+      if (socketIO) {
+        // TODO: catch error when webSocket connection is not created
         socketIO.emit(WebSocketEvent.EnterRoom, { roomCode, gameMode: mode });
       } else {
         const socket = await connectToWebSocket();
@@ -220,7 +220,7 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
         setPlayerRole && setPlayerRole(role);
       }
     },
-    [socketIO, connectToWebSocket, setPlayerRole, playerRole],
+    [socketIO, connectToWebSocket, setPlayerRole, playerRole, mode],
   );
 
   const createRoom = useCallback(async () => {
@@ -253,7 +253,7 @@ export const WebSocketProvider: FunctionComponent<{ children: ReactNode }> = ({ 
   );
 
   const confirmCardsLayout = useCallback(
-    (layoutRules: IRule[], groupWordsBySet: boolean) => {
+    (layoutRules: List<IRule>, groupWordsBySet: boolean) => {
       socketIO?.emit(WebSocketEvent.ConfirmCardsLayout, {
         roomCode,
         layoutRules,

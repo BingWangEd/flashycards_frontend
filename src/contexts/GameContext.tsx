@@ -250,26 +250,20 @@ export const GameContextProvider: FunctionComponent<{ children: ReactNode }> = <
     [setCardWords, setCardStates],
   );
 
-  return (
-    <GameContext.Provider
-      value={{
-        cardWords,
-        cardStates,
-        //@ts-ignore
-        updateCardStates,
-        implementCardActions,
-        //@ts-ignore
-        startGame,
-        currentPlayer,
-        scores,
-        winners,
-        waitingForResponse,
-        setWaitingForResponse,
-        hasFlippedCard,
-        setHasFlippedCard,
-      }}
-    >
-      {children}
-    </GameContext.Provider>
-  );
+  const newContext: IGameContext<M> = {
+    cardWords,
+    cardStates,
+    updateCardStates,
+    implementCardActions,
+    startGame,
+    currentPlayer,
+    scores,
+    winners,
+    waitingForResponse,
+    setWaitingForResponse,
+    hasFlippedCard,
+    setHasFlippedCard,
+  };
+
+  return <GameContext.Provider value={newContext}>{children}</GameContext.Provider>;
 };
