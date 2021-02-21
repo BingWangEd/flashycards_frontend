@@ -10,17 +10,6 @@ interface IProps {
   handleClick: (isOpen: boolean, position: number) => void;
 }
 
-const AnimatedCardComponent = styled.div`
-  animation: 2s
-    ${keyframes({
-      '0%': { opacity: '0' },
-      '25%': { opacity: '1' },
-      '75%': { opacity: '1' },
-      '100%': { opacity: '0' },
-    })}
-    ease-in;
-`;
-
 const MatchGameCard: FunctionComponent<IProps> = ({ word, position, isActive, isOpen, handleClick }: IProps) => {
   const isPrevActive = useRef<boolean>();
   const isPrevOpen = useRef<boolean>();
@@ -34,7 +23,7 @@ const MatchGameCard: FunctionComponent<IProps> = ({ word, position, isActive, is
   useEffect(() => {
     isPrevActive.current = isActive;
     isPrevOpen.current = isOpen;
-  });
+  }, [isActive, isOpen]);
 
   const style = {
     card: {
@@ -48,13 +37,24 @@ const MatchGameCard: FunctionComponent<IProps> = ({ word, position, isActive, is
     result: {
       position: 'absolute' as const,
       fontSize: '2em',
-      bottom: '-10px',
-      left: '67px',
+      bottom: '5px',
+      left: '84px',
       zIndex: 20,
       width: '50px',
       opacity: 0,
     },
   };
+
+  const AnimatedCardComponent = styled.div`
+    animation: 2s
+      ${keyframes({
+        '0%': { opacity: '0' },
+        '25%': { opacity: '1' },
+        '75%': { opacity: '1' },
+        '100%': { opacity: '0' },
+      })}
+      ease-in;
+  `;
 
   const animation = (
     <AnimatedCardComponent style={style.result}>

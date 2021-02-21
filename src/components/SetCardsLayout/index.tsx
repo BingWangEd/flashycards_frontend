@@ -37,7 +37,7 @@ export const DEFAULT_RULES: IRule = {
   faceUp: Content.Word,
   faceDown: Content.Translation,
   isRandomized: false,
-}
+};
 
 const defaultSetting: SettingType = {
   faceUpOption: Content.Word,
@@ -169,7 +169,7 @@ const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordN
           color={'white'}
           backgroundColor={'red'}
           onClick={() => {
-            confirmCardsLayout(layoutRules.filter((rule) => rule !== undefined) as List<IRule>, groupWordsBySet);
+            confirmCardsLayout(layoutRules.filter(rule => rule !== undefined) as List<IRule>, groupWordsBySet);
           }}
         />
       </div>

@@ -1,9 +1,11 @@
 import React, { FunctionComponent } from 'react';
 import BaseButton, { IProps as IButtonProps } from './BaseButton';
 
-const SquareButton: FunctionComponent<IButtonProps & { color?: string; backgroundColor?: string }> = (
-  { color, backgroundColor, ...props }: IButtonProps & { color?: string; backgroundColor?: string },
-) => {
+const SquareButton: FunctionComponent<IButtonProps & { color?: string; backgroundColor?: string }> = ({
+  color,
+  backgroundColor,
+  ...props
+}: IButtonProps & { color?: string; backgroundColor?: string }) => {
   const style = {
     button: {
       height: '4em',

@@ -69,12 +69,12 @@ const LayCards: FunctionComponent = () => {
     >
       {cardWords?.map((word, index) => {
         const isActive = cardStates?.get(index)?.isActive || false;
-
+        const isOpen = cardStates?.get(index)?.isOpen || false;
         return (
           <MatchGameCard
             key={index}
             word={(word && word.word) || ''}
-            isOpen={cardStates?.get(index)?.isOpen || false}
+            isOpen={isOpen}
             isActive={isActive}
             position={index}
             handleClick={handleClick}

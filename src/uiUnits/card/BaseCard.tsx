@@ -41,12 +41,15 @@ const BaseCard: FunctionComponent<IProps> = ({
     flipCard();
   }, [flipCard, isActive]);
 
-  const throttledDragCard = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (!moveCard) return;
-    const throttled = throttle(e => moveCard(e), THROTTLED_MS);
+  const throttledDragCard = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      if (!moveCard) return;
+      const throttled = throttle(e => moveCard(e), THROTTLED_MS);
 
-    return () => throttled.cancel();
-  }, [moveCard]);
+      return () => throttled.cancel();
+    },
+    [moveCard],
+  );
 
   const style = {
     card: {
