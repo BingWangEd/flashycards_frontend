@@ -1,6 +1,5 @@
 import React, { FunctionComponent, memo, useCallback } from 'react';
 import { CallbackRef } from '../../utils/utils';
-import throttle from 'lodash/throttle';
 
 export interface IProps {
   id: number;
@@ -16,8 +15,6 @@ export interface IProps {
   cardStyle?: React.CSSProperties;
   getRef?: CallbackRef;
 }
-
-const THROTTLED_MS = 200;
 
 const BaseCard: FunctionComponent<IProps> = ({
   id,
@@ -40,16 +37,6 @@ const BaseCard: FunctionComponent<IProps> = ({
     if (!isActive) return;
     flipCard();
   }, [flipCard, isActive]);
-
-  const throttledDragCard = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      if (!moveCard) return;
-      const throttled = throttle(e => moveCard(e), THROTTLED_MS);
-
-      return () => throttled.cancel();
-    },
-    [moveCard],
-  );
 
   const style = {
     card: {
@@ -100,7 +87,7 @@ const BaseCard: FunctionComponent<IProps> = ({
       }}
       onClick={handleClick}
       onDragStart={startMoveCard}
-      onDrag={throttledDragCard}
+      onDrag={moveCard}
       onDragEnd={stopMoveCard}
       ref={getRef}
     >

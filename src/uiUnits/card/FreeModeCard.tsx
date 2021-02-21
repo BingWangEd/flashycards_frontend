@@ -1,9 +1,10 @@
-import React, { FunctionComponent, memo, useCallback, useRef } from 'react';
+import React, { FunctionComponent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Content } from '../../components/SetCardsLayout';
 import BaseCard, { IProps as IBaseCardProps } from './BaseCard';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import { ClientActionType, ZindexLayer } from '../../contexts/GameContext';
 import { useRoomState } from '../../contexts/RoomStateContext';
+import { throttle } from 'lodash';
 
 export type Position = {
   x: number;
@@ -24,6 +25,7 @@ interface IFreeModeCard extends Pick<IBaseCardProps, 'id' | 'isActive' | 'getRef
 
 const CARD_WIDTH = 150;
 const CARD_HEIGHT = 150;
+const THROTTLED_MS = 200;
 
 const FreeModeCard: FunctionComponent<IFreeModeCard> = ({
   id,
@@ -98,6 +100,20 @@ const FreeModeCard: FunctionComponent<IFreeModeCard> = ({
     [id, playerName, roomCode, sendAction],
   );
 
+  const throttledDragCard = useMemo(
+    () =>
+      throttle((e: React.DragEvent<HTMLDivElement>) => {
+        moveCard(e);
+      }, THROTTLED_MS),
+    [moveCard],
+  );
+
+  useEffect(() => {
+    return () => {
+      throttledDragCard.cancel();
+    };
+  }, [throttledDragCard]);
+
   return (
     <div
       key={id}
@@ -120,7 +136,7 @@ const FreeModeCard: FunctionComponent<IFreeModeCard> = ({
         isActive={isActive}
         flipCard={onFlipCard}
         startMoveCard={startMoveCard}
-        moveCard={moveCard}
+        moveCard={throttledDragCard}
         draggable
       />
     </div>

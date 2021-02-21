@@ -111,7 +111,7 @@ const SetCardsLayout: FunctionComponent<{ allWordNumber: number }> = ({ allWordN
       setWordSets(wordSets.set(index, undefined));
       setLayoutRules(layoutRules.set(index, undefined));
     },
-    [setWordSets, wordSets],
+    [setWordSets, wordSets, layoutRules],
   );
 
   return (
