@@ -11,7 +11,7 @@ const SquareButton: FunctionComponent<IButtonProps & { color?: string; backgroun
       height: '4em',
       width: '100%',
       padding: '1.5em auto',
-      margin: '1em auto',
+      margin: '1em auto 0 auto',
       backgroundColor: backgroundColor ? backgroundColor : 'white',
       color: color ? color : 'black',
       border: '1px solid #ccc',

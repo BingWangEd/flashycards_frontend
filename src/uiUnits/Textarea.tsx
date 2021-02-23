@@ -58,6 +58,7 @@ const Textarea: FunctionComponent<IProps> = ({ label, value, onSubmit, onChange,
         placeholder={label}
         onKeyDown={handleEnter}
         onChange={handleChange}
+        value={value}
         {...props}
       />
     </div>

@@ -5,6 +5,9 @@ import SquareButton from '../../uiUnits/buttons/SquareButton';
 import Textarea from '../../uiUnits/Textarea';
 import { parseGameWords } from '../../utils/utils';
 
+const sampleData =
+  '成绩#grade\n表彰#praise, award\n成長#growth\n謙虚#humble\n副作用#side effect\n尊敬#respect\n資金#funding\n事故#accident';
+
 const WaitForMembers: FunctionComponent = () => {
   // get all memebers
   const { allMembers, roomCode, playerName, playerRole, setRoomState } = useRoomState();
@@ -103,7 +106,14 @@ const WaitForMembers: FunctionComponent = () => {
           pattern="/^([^-\n]*-[^-\n]*)\n{7,}([^-\n]*-[^-\n]*)$/"
           title="To submit words for practice you need to follow the format"
         />
-        <SquareButton label={'Submit the Words and Start Game'} onClick={handleSubmitWordsStartGame} type="submit" />
+        <SquareButton label={'Input Sample Data'} onClick={() => handleInputChange(sampleData)} type="button" />
+        <SquareButton
+          color={'white'}
+          backgroundColor={'red'}
+          label={'Submit the Words and Start Game'}
+          onClick={handleSubmitWordsStartGame}
+          type="submit"
+        />
       </div>
     );
   }
