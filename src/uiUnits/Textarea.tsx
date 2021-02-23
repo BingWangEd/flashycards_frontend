@@ -1,4 +1,4 @@
-import React, { useState, useCallback, FunctionComponent } from 'react';
+import React, { useCallback, FunctionComponent } from 'react';
 
 export enum TextareaVariant {
   Small,
@@ -7,6 +7,7 @@ export enum TextareaVariant {
 
 interface IProps {
   label: string;
+  value: string;
   onSubmit?: (value: string) => void;
   onChange?: (value: string) => void;
   variant?: TextareaVariant;
@@ -14,8 +15,7 @@ interface IProps {
   title?: string;
 }
 
-const Textarea: FunctionComponent<IProps> = ({ label, onSubmit, onChange, variant, ...props }: IProps) => {
-  const [value, setValue] = useState<string>('');
+const Textarea: FunctionComponent<IProps> = ({ label, value, onSubmit, onChange, variant, ...props }: IProps) => {
   const styleByVariant =
     variant === TextareaVariant.Big
       ? {
@@ -39,7 +39,6 @@ const Textarea: FunctionComponent<IProps> = ({ label, onSubmit, onChange, varian
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setValue(e.target.value);
     onChange && onChange(e.target.value);
   };
 

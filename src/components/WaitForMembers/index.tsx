@@ -9,7 +9,7 @@ const WaitForMembers: FunctionComponent = () => {
   // get all memebers
   const { allMembers, roomCode, playerName, playerRole, setRoomState } = useRoomState();
   const { setWords: setGameWords } = useWebSocketContext();
-  const [words, setWords] = useState<string>();
+  const [words, setWords] = useState<string>('');
   const [ruleStates, setRuleStates] = useState([false, false, false]);
 
   const style = {
@@ -52,12 +52,14 @@ const WaitForMembers: FunctionComponent = () => {
 
   const handleSubmitWordsStartGame = useCallback(() => {
     const regexPattern = /^(([^#\n]*#[^#\n]*)\n){7,}([^#\n]*#[^#\n]*)$/g;
-    if (!words || !regexPattern.test(words)) {
+    // remove the last newline
+    if (!words || !regexPattern.test(words.replace(/[\r|\n|\r\n]$/, ''))) {
       alert('Submitted text does not follow format');
       return;
     }
 
-    const parsedWords = parseGameWords(words);
+    // remove the last newline
+    const parsedWords = parseGameWords(words.replace(/[\r|\n|\r\n]$/, ''));
     setGameWords(parsedWords);
 
     setRoomState && setRoomState(RoomState.Loading);
@@ -69,7 +71,10 @@ const WaitForMembers: FunctionComponent = () => {
 
       const currentRuleStates: boolean[] = [false, false, false];
       rules.forEach(([rule, regexPattern], index) => {
-        const isMatched = regexPattern.test(value);
+        // remove the last newline
+        const convertedValue = value.replace(/[\r|\n|\r\n]$/, '');
+        console.log('convertedValue: ', convertedValue);
+        const isMatched = regexPattern.test(convertedValue);
         currentRuleStates[index] = isMatched;
       });
 
@@ -93,6 +98,7 @@ const WaitForMembers: FunctionComponent = () => {
           label={
             "Enter the words you'd like to practice\nThey need to follow the rules above\n\nFor example:\nbon voyage#have a good trip\nbonjour#hello\n..."
           }
+          value={words}
           onChange={handleInputChange}
           pattern="/^([^-\n]*-[^-\n]*)\n{7,}([^-\n]*-[^-\n]*)$/"
           title="To submit words for practice you need to follow the format"

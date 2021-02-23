@@ -44,11 +44,12 @@ const CaseDictatableInputBox: FunctionComponent<ICaseDictatableInputBox> = ({
     padding: '7px',
     borderBottom: '1px solid #ccc',
     overflow: 'scroll',
-    textTransform: caseStyle === CaseStyle.Upper
-    ? 'uppercase' as const
-    : caseStyle === CaseStyle.Lower
-    ? 'lowercase' as const
-    : 'none' as const,
+    textTransform:
+      caseStyle === CaseStyle.Upper
+        ? ('uppercase' as const)
+        : caseStyle === CaseStyle.Lower
+        ? ('lowercase' as const)
+        : ('none' as const),
   };
   return <BaseInputBox value={value} onChange={handleChange} onSubmit={handleSubmit} style={style} {...props} />;
 };
