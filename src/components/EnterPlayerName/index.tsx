@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useCallback } from 'react';
 import { RoomState, useRoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import InputBox from '../../uiUnits/InputBox';
+import CaseDictatableInputBox from '../../uiUnits/inputBox/CaseDictatableInputBox';
 
 const EnterPlayerName: FunctionComponent = () => {
   const { submitName } = useWebSocketContext();
@@ -17,7 +17,7 @@ const EnterPlayerName: FunctionComponent = () => {
 
   return (
     <div>
-      <InputBox label={'Enter Your Name'} onSubmit={handleSubmit} />
+      <CaseDictatableInputBox label={'Enter Your Name'} onSubmit={handleSubmit} />
     </div>
   );
 };

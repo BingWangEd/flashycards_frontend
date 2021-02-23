@@ -2,7 +2,7 @@ import React, { FunctionComponent, useCallback } from 'react';
 import { RoomState, useRoomState } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import SquareButton from '../../uiUnits/buttons/SquareButton';
-import InputBox from '../../uiUnits/InputBox';
+import CaseDictatableInputBox, { CaseStyle } from '../../uiUnits/inputBox/CaseDictatableInputBox';
 
 const GetGameRoom: FunctionComponent = () => {
   const { enterRoom, createRoom } = useWebSocketContext();
@@ -23,7 +23,11 @@ const GetGameRoom: FunctionComponent = () => {
 
   return (
     <div>
-      <InputBox label={'Enter A Room You Want to Join'} onSubmit={handleEnterARoom} />
+      <CaseDictatableInputBox
+        label={'Enter A Room You Want to Join'}
+        onSubmit={handleEnterARoom}
+        caseStyle={CaseStyle.Upper}
+      />
       <h4>or</h4>
       <div>
         <SquareButton onClick={handleCreateNewRoom} label="Create a New Room" />
