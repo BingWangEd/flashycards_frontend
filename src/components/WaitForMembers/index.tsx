@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
-import { useRoomState, PlayerRole, RoomState } from '../../contexts/RoomStateContext';
+import { useRoomState, PlayerRole, RoomState, Mode } from '../../contexts/RoomStateContext';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import SquareButton from '../../uiUnits/buttons/SquareButton';
 import Textarea from '../../uiUnits/Textarea';
@@ -10,7 +10,7 @@ const sampleData =
 
 const WaitForMembers: FunctionComponent = () => {
   // get all memebers
-  const { allMembers, roomCode, playerName, playerRole, setRoomState } = useRoomState();
+  const { allMembers, roomCode, playerName, playerRole, setRoomState, mode } = useRoomState();
   const { setWords: setGameWords } = useWebSocketContext();
   const [words, setWords] = useState<string>('');
   const [ruleStates, setRuleStates] = useState([false, false, false]);
@@ -30,6 +30,8 @@ const WaitForMembers: FunctionComponent = () => {
     },
     ruleWrapper: {
       textAlign: 'left' as const,
+      width: '100%',
+      maxWidth: '800px',
     },
   };
   const rules: [string, RegExp][] = useMemo(
@@ -53,20 +55,23 @@ const WaitForMembers: FunctionComponent = () => {
     [],
   );
 
-  const handleSubmitWordsStartGame = useCallback(() => {
-    const regexPattern = /^(([^#\n]*#[^#\n]*)\n){7,}([^#\n]*#[^#\n]*)$/g;
-    // remove the last newline
-    if (!words || !regexPattern.test(words.replace(/[\r|\n|\r\n]$/, ''))) {
-      alert('Submitted text does not follow format');
-      return;
-    }
+  const handleSubmitWordsStartGame = useCallback(
+    (gameWords: string) => {
+      const regexPattern = /^(([^#\n]*#[^#\n]*)\n){7,}([^#\n]*#[^#\n]*)$/g;
+      // remove the last newline
+      if (!gameWords || !regexPattern.test(gameWords.replace(/[\r|\n|\r\n]$/, ''))) {
+        alert('Submitted text does not follow format');
+        return;
+      }
 
-    // remove the last newline
-    const parsedWords = parseGameWords(words.replace(/[\r|\n|\r\n]$/, ''));
-    setGameWords(parsedWords);
+      // remove the last newline
+      const parsedWords = parseGameWords(gameWords.replace(/[\r|\n|\r\n]$/, ''));
+      setGameWords(parsedWords);
 
-    setRoomState && setRoomState(RoomState.Loading);
-  }, [words, setGameWords, setRoomState]);
+      setRoomState && setRoomState(RoomState.Loading);
+    },
+    [setGameWords, setRoomState],
+  );
 
   const handleInputChange = useCallback(
     (value: string) => {
@@ -76,7 +81,6 @@ const WaitForMembers: FunctionComponent = () => {
       rules.forEach(([rule, regexPattern], index) => {
         // remove the last newline
         const convertedValue = value.replace(/[\r|\n|\r\n]$/, '');
-        console.log('convertedValue: ', convertedValue);
         const isMatched = regexPattern.test(convertedValue);
         currentRuleStates[index] = isMatched;
       });
@@ -87,7 +91,7 @@ const WaitForMembers: FunctionComponent = () => {
   );
 
   let wordsInput;
-  if (playerRole === PlayerRole.Teacher) {
+  if (playerRole === PlayerRole.Teacher && mode === Mode.Free) {
     wordsInput = (
       <div style={style.inputWords}>
         <h2>You created the room</h2>
@@ -111,10 +115,25 @@ const WaitForMembers: FunctionComponent = () => {
           color={'white'}
           backgroundColor={'red'}
           label={'Submit the Words and Start Game'}
-          onClick={handleSubmitWordsStartGame}
+          onClick={() => {
+            handleSubmitWordsStartGame(words);
+          }}
           type="submit"
         />
       </div>
+    );
+  }
+
+  let confirmButton;
+  if (playerRole === PlayerRole.Teacher && mode === Mode.Game) {
+    confirmButton = (
+      <SquareButton
+        color={'white'}
+        backgroundColor={'red'}
+        label={'Start Game'}
+        onClick={() => handleSubmitWordsStartGame(sampleData)}
+        type="submit"
+      />
     );
   }
 
@@ -144,10 +163,11 @@ const WaitForMembers: FunctionComponent = () => {
   }
 
   return (
-    <div style={{ width: '60%' }}>
+    <div style={{ width: '50%' }}>
       <h2>You are in Room 🗝: {roomCode}</h2>
       {joinMembers}
       {wordsInput}
+      {confirmButton}
     </div>
   );
 };

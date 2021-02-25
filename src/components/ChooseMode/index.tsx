@@ -63,7 +63,7 @@ const ChooseMode: FunctionComponent = () => {
           <h2>Free Mode</h2>
           <div style={style.textContainer}>
             <p>Lay out flashcards the way you want</p>
-            <p>Live interact with cards: Flip, move and play with all participants</p>
+            <p>Interact live with cards: Flip, move and play with all participants</p>
           </div>
         </div>
         <div

@@ -24,6 +24,7 @@ const Textarea: FunctionComponent<IProps> = ({ label, value, onSubmit, onChange,
         }
       : {
           width: '100%',
+          maxWidth: '800px',
           height: '200px',
         };
   const style = {

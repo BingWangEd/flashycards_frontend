@@ -10,8 +10,9 @@ const SquareButton: FunctionComponent<IButtonProps & { color?: string; backgroun
     button: {
       height: '4em',
       width: '100%',
+      maxWidth: '400px',
       padding: '1.5em auto',
-      margin: '1em auto 0 auto',
+      margin: '1em 0.5em 0 0.5em',
       backgroundColor: backgroundColor ? backgroundColor : 'white',
       color: color ? color : 'black',
       border: '1px solid #ccc',
