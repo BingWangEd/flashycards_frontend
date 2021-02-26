@@ -114,7 +114,7 @@ const WaitForMembers: FunctionComponent = () => {
         <SquareButton
           color={'white'}
           backgroundColor={'red'}
-          label={'Submit the Words and Start Game'}
+          label={'Submit the Words'}
           onClick={() => {
             handleSubmitWordsStartGame(words);
           }}
